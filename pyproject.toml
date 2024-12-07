@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oml"
+description = "machine learning optimisation"
+authors = [
+    {name = "Jakub Pietrzak"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+version = "0.0.1"
+
+dependencies = [
+    "pandas",
+    "numpy",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+
+test = ["pytest", "pytest-cov"]
+
+code-check = ["black"]
+
+dev = [
+    "oml[test]",
+    "oml[code-check]",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["oml*"]
+namespaces = false
+
+[tool.black]
+line-length = 120
