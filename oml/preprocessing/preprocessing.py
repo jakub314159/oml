@@ -4,10 +4,10 @@ import numpy as np
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 
+
 class Preprocessor:
     def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
         """
-
         Parameters
         ----------
         dataframe : pd.Dataframe
@@ -36,7 +36,7 @@ class Preprocessor:
     def __repr__(self):
         return f"{self.__class__.__name__}(dataframe={self.df}, target_column_name={self.target_column_name}, strategy={self.imputer.strategy})"
 
-    def remove_invalid_data(self):
+    def remove_invalid_data(self) -> None:
         """
         Removes all rows that don't have target.
 
@@ -50,20 +50,18 @@ class Preprocessor:
 
         self.df = self.df.reset_index(drop=True)
 
-    def data_target_split(self):
+    def data_target_split(self) -> None:
         """
-        Splits dataframe into data and target.
+        Splits dataframe into 2 dataframes: data, target.
 
         Returns
         -------
         None
         """
-        df_dict = self.df.to_dict()
+        self.target = self.df[[self.target_column_name]]
+        self.data = self.df.drop(columns=[self.target_column_name])
 
-        self.target = df_dict.pop(self.target_column_name)
-        self.data = pd.DataFrame.from_dict(df_dict)
-
-    def impute(self):
+    def impute(self) -> None:
         """
         If a value in data is None or np.nan it sets it according to the SimpleImputer strategy.
 
@@ -74,7 +72,7 @@ class Preprocessor:
         self.imputer.fit(self.X_train)
         self.X_train = self.imputer.transform(self.X_train)
 
-    def get_dummies(self):
+    def get_dummies(self) -> None:
         """
         Pandas get_dummies on data.
 
@@ -84,29 +82,25 @@ class Preprocessor:
         """
         self.data = pd.get_dummies(self.data)
 
-    def map_target(self):
+    def map_target(self) -> None:
         """
         Maps target and prepares it for classification.
-        Makes target a dataframe.
 
         Returns
         -------
         None
         """
-        a = 0
-        for value in self.target.values():
+        mapping_val = 0
+        for value in self.target[self.target_column_name]:
             if value not in self.target_mapping:
-                self.target_mapping[(str(value))] = a
-                a += 1
+                self.target_mapping[value] = mapping_val
+                mapping_val += 1
 
-        for key, val in self.target.items():
-            self.target[key] = self.target_mapping[val]
+        self.target[self.target_column_name] = self.target[self.target_column_name].map(self.target_mapping)
 
-        self.target = pd.DataFrame.from_dict(self.target, orient="index")
-
-    def train_test_split(self, test_size: float | None = 0.2):
+    def train_test_split(self, test_size: float | None = 0.2) -> None:
         """
-        Splits data and target into train and test according to the test_size
+        Splits data and target into train and test according to the test_size.
 
         Parameters
         ----------
@@ -123,6 +117,7 @@ class Preprocessor:
         self.X_test = b
         self.y_train = c
         self.y_test = d
+
 
 if __name__ == "__main__":
     iris = load_iris()
