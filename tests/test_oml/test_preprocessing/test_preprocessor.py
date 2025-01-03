@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from oml.preprocessing.preprocessing import Preprocessor
+from oml.preprocessing.preprocessor import Preprocessor
 
 ## Todo 2: improving tests adding comments  'given', adding prints after assert after comma.
 
@@ -27,15 +27,6 @@ class Test_Preprocessor:
 
         assert preprocessor.target.shape == (len(preprocessor.df), 1)
         assert not "y" in preprocessor.data.columns
-
-    def test_impute(self, preprocessor):
-        preprocessor.df["x"] = [1, 2, np.nan, 4, 5, np.nan, 7, 8, 9, 10]
-        preprocessor.data_target_split()
-        preprocessor.train_test_split()
-
-        preprocessor.impute()
-
-        assert all(x for x in preprocessor.data["x"] if x != np.nan)
 
     def test_get_dummies(self):
         data = {
@@ -66,3 +57,12 @@ class Test_Preprocessor:
         assert preprocessor.X_test.shape == (2, 1)
         assert preprocessor.y_train.shape == (8, 1)
         assert preprocessor.y_test.shape == (2, 1)
+
+    def test_impute(self, preprocessor):
+        preprocessor.df["x"] = [1, 2, np.nan, 4, 5, np.nan, 7, 8, 9, 10]
+        preprocessor.data_target_split()
+        preprocessor.train_test_split()
+    
+        preprocessor.impute()
+    
+        assert all(x for x in preprocessor.data["x"] if x != np.nan)

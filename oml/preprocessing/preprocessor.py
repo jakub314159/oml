@@ -61,17 +61,6 @@ class Preprocessor:
         self.target = self.df[[self.target_column_name]]
         self.data = self.df.drop(columns=[self.target_column_name])
 
-    def impute(self) -> None:
-        """
-        If a value in data is None or np.nan it sets it according to the SimpleImputer strategy.
-
-        Returns
-        -------
-        None
-        """
-        self.imputer.fit(self.X_train)
-        self.X_train = self.imputer.transform(self.X_train)
-
     def get_dummies(self) -> None:
         """
         Pandas get_dummies on data.
@@ -117,6 +106,36 @@ class Preprocessor:
         self.X_test = b
         self.y_train = c
         self.y_test = d
+
+    def impute(self) -> None:
+        """
+        If a value in data is None or np.nan it sets it according to the SimpleImputer strategy.
+
+        Returns
+        -------
+        None
+        """
+        #Todo 1 imputer seams to have a problem in model selector tests and doesn't impute X_test
+
+        self.imputer.fit(self.X_train)
+        self.X_train = self.imputer.transform(self.X_train)
+
+    def process(self) -> pd.DataFrame:
+        """
+        Calls all the class methods at once.
+
+        Returns
+        -------
+        pd.Dataframe: X_train, X_test, y_train, y_test
+        """
+        self.remove_invalid_data()
+        self.data_target_split()
+        self.get_dummies()
+        self.map_target()
+        self.data_target_split()
+        self.impute()
+
+        return self.X_train, self.X_test, self.y_train, self.y_test
 
 
 if __name__ == "__main__":
