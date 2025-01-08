@@ -79,6 +79,12 @@ class Preprocessor:
         -------
         None
         """
+        if all([isinstance(x, int) for x in self.target]):
+            return None
+
+        if any([isinstance(x, int) for x in self.target]) and any([isinstance(x, str) for x in self.target]):
+            raise ValueError("The target column is not properly represented.")
+
         mapping_val = 0
         for value in self.target[self.target_column_name]:
             if value not in self.target_mapping:
@@ -100,7 +106,7 @@ class Preprocessor:
         -------
         None
         """
-        a, b, c, d = train_test_split(self.data, self.target, test_size=test_size)
+        a, b, c, d = train_test_split(self.data, self.target, test_size=test_size, stratify=self.target)
 
         self.X_train = a
         self.X_test = b
