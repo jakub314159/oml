@@ -62,7 +62,7 @@ class Test_Preprocessor:
         preprocessor.df["x"] = [1, 2, np.nan, 4, 5, np.nan, 7, 8, 9, 10]
         preprocessor.data_target_split()
         preprocessor.train_test_split()
-    
+
         preprocessor.impute()
-    
+
         assert all(x for x in preprocessor.data["x"] if x != np.nan)

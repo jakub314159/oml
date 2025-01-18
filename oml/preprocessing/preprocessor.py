@@ -1,4 +1,3 @@
-from sklearn.datasets import load_iris
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
@@ -121,38 +120,7 @@ class Preprocessor:
         -------
         None
         """
-        #Todo 1 imputer seams to have a problem in model selector tests and doesn't impute X_test
+        # Todo 1 imputer seams to have a problem in model selector tests and doesn't impute X_test
 
         self.imputer.fit(self.X_train)
         self.X_train = self.imputer.transform(self.X_train)
-
-    def process(self) -> pd.DataFrame:
-        """
-        Calls all the class methods at once.
-
-        Returns
-        -------
-        pd.Dataframe: X_train, X_test, y_train, y_test
-        """
-        self.remove_invalid_data()
-        self.data_target_split()
-        self.get_dummies()
-        self.map_target()
-        self.data_target_split()
-        self.impute()
-
-        return self.X_train, self.X_test, self.y_train, self.y_test
-
-
-if __name__ == "__main__":
-    iris = load_iris()
-    iris_df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
-
-    iris_df["species"] = iris.target
-    iris_df["species"] = iris_df["species"].map(dict(enumerate(iris.target_names)))
-
-    processor = Preprocessor(iris_df, "species")
-    processor.remove_invalid_data()
-    processor.data_target_split()
-    processor.map_target()
-    print(processor.train_test_split())

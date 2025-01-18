@@ -20,14 +20,15 @@ class ModelSelector:
 
         self.n_splits = min(min(Counter(self.y_train).values()), 5)
 
-        self.model_list = ["logistic_regression", "KNN", "decision_tree_classification", "random_forests", "svc"]
-        self._models_mapping = {
+        self.models_mapping = {
             "logistic_regression": LogisticRegression,
             "KNN": KNeighborsClassifier,
             "decision_tree_classification": DecisionTreeClassifier,
             "random_forests": RandomForestClassifier,
             "svc": SVC,
         }
+
+        self.model_list = [x for x in self.models_mapping.keys()]
 
         self.param_mapping = {
             "logistic_regression": {"max_iter": [50, 80, 100, 120, 150]},
@@ -40,7 +41,7 @@ class ModelSelector:
     def get_all_model_scores(self, model_name: str):
         params = self.param_mapping[model_name]
         combinations = [dict(zip(params.keys(), combination)) for combination in product(*params.values())]
-        class_name = self._models_mapping[model_name]
+        class_name = self.models_mapping[model_name]
 
         for combination in combinations:
             model = class_name(**combination)
@@ -54,20 +55,4 @@ class ModelSelector:
         for model_name in self.model_list:
             self.get_all_model_scores(model_name)
 
-        return sorted(self.model_scores, key=lambda x: x.get("score"), reverse= True)[:n_best]
-
-if __name__ == "__main__":
-    import pandas as pd
-
-    from oml.preprocessing.preprocessor import Preprocessor
-
-    df = pd.DataFrame({"x": [x for x in range(60)], "y": [x for x in "aaabbbccccaaabbbccccaaabbbccccaaabbbccccaaabbbccccaaabbbcccc"]})
-
-    preprocessor = Preprocessor(dataframe=df, target_column_name="y")
-    preprocessor.data_target_split()
-    preprocessor.map_target()
-    preprocessor.train_test_split()
-
-    selector = ModelSelector(preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test)
-    best_models = selector.find_best_performing_models()
-    print("")
+        return sorted(self.model_scores, key=lambda x: x.get("score"), reverse=True)[:n_best]

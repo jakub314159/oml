@@ -10,7 +10,7 @@ def test_model_selector_on_iris_df():
 
     iris_df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     iris_df["species"] = iris.target
-    iris_df['species'] = iris_df['species'].map(dict(enumerate(iris.target_names)))
+    iris_df["species"] = iris_df["species"].map(dict(enumerate(iris.target_names)))
 
     preprocessor = Preprocessor(dataframe=iris_df, target_column_name="species")
     preprocessor.remove_invalid_data()
