@@ -5,7 +5,7 @@ import time
 
 # Task: Compute squares of numbers
 def compute_squares(numbers):
-    results = [n ** 2 for n in numbers]
+    results = [n**2 for n in numbers]
     return results
 
 
@@ -23,7 +23,7 @@ def process_task(numbers):
 
 # Main function
 if __name__ == "__main__":
-    numbers = range(1, 10 ** 6)  # Large dataset for demonstration
+    numbers = range(1, 10**6)  # Large dataset for demonstration
 
     # MULTITHREADING
     print("\n--- Multithreading Example ---")
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     threads = []
     for i in range(4):  # 4 threads
-        thread = threading.Thread(target=thread_task, args=(numbers, ))
+        thread = threading.Thread(target=thread_task, args=(numbers,))
         threads.append(thread)
         thread.start()
 

@@ -9,7 +9,7 @@ def find_primes(n):
     primes = []
     for num in range(2, n + 1):
         is_prime = True
-        for divisor in range(2, int(num ** 0.5) + 1):
+        for divisor in range(2, int(num**0.5) + 1):
             if num % divisor == 0:
                 is_prime = False
                 break
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     for i in range(4):  # 4 threads
         start = i * chunk_size + 1
         end = (i + 1) * chunk_size
-        thread = threading.Thread(target=thread_task, args=(end, ))
+        thread = threading.Thread(target=thread_task, args=(end,))
         threads.append(thread)
         thread.start()
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     for i in range(4):  # 4 processes
         start = i * chunk_size + 1
         end = (i + 1) * chunk_size
-        process = multiprocessing.Process(target=process_task, args=(end, ))
+        process = multiprocessing.Process(target=process_task, args=(end,))
         processes.append(process)
         process.start()
 
