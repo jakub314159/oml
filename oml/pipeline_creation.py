@@ -19,13 +19,13 @@ class PipelineCreator:
         self.best_models = {}
         self.model_info = []
 
-    def dataframe_preprocessing(self, test_df_size: float) -> None:
+    def dataframe_preprocessing(self, train_test_split_size: float = 0.2) -> None:
         """
         Does preprocessing on the dataframe.
 
         Parameters
         ----------
-        test_df_size: float
+        train_test_split_size: float
             The size of the test df.
         Returns
         -------
@@ -35,7 +35,7 @@ class PipelineCreator:
         self.preprocessor.data_target_split()
         self.preprocessor.get_dummies()
         self.preprocessor.map_target()
-        self.preprocessor.train_test_split(test_size=test_df_size)
+        self.preprocessor.train_test_split(test_size=train_test_split_size)
         self.preprocessor.impute()
 
         self.imputer = self.preprocessor.imputer
@@ -130,7 +130,7 @@ class PipelineCreator:
         """
         self.best_models = self.selector.find_best_performing_models(n_best)
 
-    def get_n_best_scoring_models(self, test_metric: str, n_best: int = 3) -> None:
+    def get_n_best_scoring_models(self, test_metric: str, n_best: int = 2) -> None:
         """
         Gets best performing models on the selected metric.
 

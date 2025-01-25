@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
 
 
 class Preprocessor:
@@ -22,6 +23,7 @@ class Preprocessor:
         self._raw_df = dataframe
         self.target_column_name = target_column_name
         self.imputer = SimpleImputer(missing_values=np.nan, strategy=strategy)
+        self.encoder = OneHotEncoder()
 
         self.data = None
         self.target = None

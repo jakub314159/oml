@@ -14,6 +14,12 @@ def preprocessor():
     preprocessor = Preprocessor(dataframe=df, target_column_name="y")
     return preprocessor
 
+@pytest.fixture()
+def better_data_preprocessor():
+    df = pd.DataFrame({"x": [x for x in range(30)], "y": [x for x in "aaabbbccccaaabbbccccaaabbbcccc"]})
+
+    preprocessor = Preprocessor(dataframe=df, target_column_name="y")
+    return preprocessor
 
 class Test_Preprocessor:
     def test_remove_invalid_data(self, preprocessor):
@@ -48,21 +54,21 @@ class Test_Preprocessor:
         expected_mapping = {"a": 0, "b": 1, "c": 2}
         assert preprocessor.target_mapping == expected_mapping
 
-    def test_train_test_split(self, preprocessor):
-        preprocessor.data_target_split()
-        preprocessor.train_test_split(0.2)
+    def test_train_test_split(self, better_data_preprocessor):
+        better_data_preprocessor.data_target_split()
+        better_data_preprocessor.train_test_split(0.2)
 
-        assert isinstance(preprocessor.X_train, pd.DataFrame), "X_train after train_test_split must be pd.Dataframe."
-        assert preprocessor.X_train.shape == (8, 1)
-        assert preprocessor.X_test.shape == (2, 1)
-        assert preprocessor.y_train.shape == (8, 1)
-        assert preprocessor.y_test.shape == (2, 1)
+        assert isinstance(better_data_preprocessor.X_train, pd.DataFrame), "X_train after train_test_split must be pd.Dataframe."
+        assert better_data_preprocessor.X_train.shape == (24, 1)
+        assert better_data_preprocessor.X_test.shape == (6, 1)
+        assert better_data_preprocessor.y_train.shape == (24, 1)
+        assert better_data_preprocessor.y_test.shape == (6, 1)
 
-    def test_impute(self, preprocessor):
-        preprocessor.df["x"] = [1, 2, np.nan, 4, 5, np.nan, 7, 8, 9, 10]
-        preprocessor.data_target_split()
-        preprocessor.train_test_split()
+    def test_impute(self, better_data_preprocessor):
+        better_data_preprocessor.df["x"] = [1, 2, np.nan, 4, 5, np.nan, 7, 8, 9, 10] + [x for x in range(11, 31)]
+        better_data_preprocessor.data_target_split()
+        better_data_preprocessor.train_test_split()
 
-        preprocessor.impute()
+        better_data_preprocessor.impute()
 
-        assert all(x for x in preprocessor.data["x"] if x != np.nan)
+        assert all(x for x in better_data_preprocessor.data["x"] if x != np.nan)

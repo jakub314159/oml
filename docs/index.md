@@ -4,6 +4,12 @@ Welcome to **OML** (Optimized Machine Learning), a project designed to improve y
 
 ---
 
+## Todo
+- add validation in train_test_split (data must have >= 20 elements)
+- pipeline creator, model selector class docstring
+- add onehotencoder in preprocessor and pipeline creator
+
+
 ## Commands
 
 Here are the commands to get started with OML:
