@@ -7,7 +7,7 @@ import pickle
 
 from oml.preprocessing.preprocessor import Preprocessor, SimpleImputer
 from oml.model_selection.model_selector import ModelSelector
-from oml.utils.finding_best_models import find_best_performing_models
+from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
 
 class PipelineCreator:
@@ -122,7 +122,7 @@ class PipelineCreator:
         Parameters
         ----------
         n_best: int
-            The amount of best models you want to get
+            Number of best performing models you want to get
 
         Returns
         -------
@@ -130,7 +130,21 @@ class PipelineCreator:
         """
         self.best_models = self.selector.find_best_performing_models(n_best)
 
-    def get_n_best_scoring_models(self, test_metric: str, n_best: int = 3):
+    def get_n_best_scoring_models(self, test_metric: str, n_best: int = 3) -> None:
+        """
+        Gets best performing models on the selected metric.
+
+        Parameters
+        ----------
+        test_metric: str
+            Best soothing metric for your classification problem
+        n_best: int
+            Number of best performing models you want to get
+
+        Returns
+        -------
+        None
+        """
         metric_function_mapping = {
             "accuracy": accuracy_score,
             "recall": recall_score,
@@ -145,20 +159,27 @@ class PipelineCreator:
 
         for model_dict in self.best_models:
             params = model_dict["params"]
-            model = model_dict["model_name"](**params)
+            model = model_dict["model_class"](**params)
 
-            model.fit(self.selector.X_train)
+            model.fit(self.selector.X_train, self.selector.y_train)
             y_pred = model.predict(self.selector.X_test)
 
-            score = metric_function(self.selector.y_test, y_pred)
+            if metric_function == "accuracy":
+                score = metric_function(self.selector.y_test, y_pred)
+            else:
+                score = metric_function(self.selector.y_test, y_pred, average= "micro")
 
             self.model_info.append({"model": model, "score": score, "name": model_dict["model_name"]})
-        self.model_info = find_best_performing_models(self.model_info, n_best)
+        self.model_info = utils_find_best_performing_models(self.model_info, n_best)
 
+    def get_best_performing_models(self):
+        for x in self.model_info:
+            print(f"{x['name']} params are {x['model']}")
+            print(f"{x['name']} got a score of {x['score']}")
 
-    def create_model_pipeline(self, name: str= None, index: int= 0 | None):
+    def create_model_pipeline(self, name: str= None, index: int= None) -> Pipeline:
         """
-        Creates a pipeline for the selected model.
+        Creates a pipeline for the selected model (either name of index is required).
 
         Parameters
         ----------
@@ -186,21 +207,23 @@ class PipelineCreator:
 
         return pipeline
 
-    def save_model_to_pickle_file(self, file_path: str | Path, index: int = None, name: str = None, model_pipeline: Pipeline = None):
+    def save_model_to_pickle_file(self, file_path: str | Path, name: str = None, index: int = None, model_pipeline: Pipeline = None) -> None:
         """
-        Saves a model or pipeline to a pickle file.
+        Saves a model or pipeline to a pickle file (either name or index or model_pipeline required).
 
         Parameters
         ----------
         file_path: str | Path
             The path in which you want to save the file.
-        index: int
-            The index of the model in the model info list.
+
         name: str | None
-            The name of the model.
+            (optional) The name of the model.
+
+        index: int
+            (optional) The index of the model in the model info list.
 
         model_pipeline: Pipeline
-            If you created a pipeline it can be passed here to save.
+            (optional) If you created a pipeline it can be passed here to save.
 
         Returns
         -------

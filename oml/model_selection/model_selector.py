@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 
-from oml.utils.finding_best_models import find_best_performing_models
+from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
 
 class ModelSelector:
@@ -51,10 +51,10 @@ class ModelSelector:
             scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits)
             score = sum(scores) / len(scores)
 
-            self.model_scores.append({"model_name": model_name, "params": combination, "score": score})
+            self.model_scores.append({"model_name": model_name, "model_class": self.models_mapping[model_name], "params": combination, "score": score})
 
     def find_best_performing_models(self, n_best: int = 3):
         for model_name in self.model_list:
             self.get_all_model_scores(model_name)
 
-        return find_best_performing_models(self.model_scores, n_best)
+        return utils_find_best_performing_models(self.model_scores, n_best)
