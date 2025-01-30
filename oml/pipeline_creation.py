@@ -1,9 +1,10 @@
 from pathlib import Path
+import pickle
 
 import pandas as pd
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score
-import pickle
 
 from oml.preprocessing.preprocessor import Preprocessor, SimpleImputer
 from oml.model_selection.model_selector import ModelSelector
@@ -11,9 +12,25 @@ from oml.utils.utils_finding_best_models import utils_find_best_performing_model
 
 
 class PipelineCreator:
+    """
+    Class used to create pipelines with chosen models.
+
+    Parameters
+    ----------
+    dataframe: pd.Dataframe
+        Dataframe that will be processed.
+
+    target_column_name: str
+        The name of the target column.
+
+    strategy: str
+        Strategy to the imputer.
+    """
+
     def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
         self.preprocessor = Preprocessor(dataframe, target_column_name, strategy)
         self.imputer: SimpleImputer = None
+        self.encoder: OneHotEncoder = None
         self.selector: ModelSelector = None
 
         self.best_models = {}
@@ -73,7 +90,7 @@ class PipelineCreator:
         None
         """
         self.selector.models_mapping[model_name] = model_class
-        self.selector.model_list = [x for x in self.selector.models_mapping.keys()]
+        self.selector.model_list = list(self.selector.models_mapping.keys())
 
         self.selector.param_mapping[model_name] = {parameter_name: parameter_vals}
 
@@ -115,7 +132,7 @@ class PipelineCreator:
         """
         self.selector.param_mapping[model_name] = {parameter_name: parameter_vals}
 
-    def find_best_performing_models(self, n_best: int = 3) -> None:
+    def find_best_models(self, n_best: int = 3) -> list:
         """
         Creates a dict of best performing models on the dataframe.
 
@@ -129,8 +146,9 @@ class PipelineCreator:
         None
         """
         self.best_models = self.selector.find_best_performing_models(n_best)
+        return self.best_models
 
-    def get_n_best_scoring_models(self, test_metric: str, n_best: int = 2) -> None:
+    def metric_test_and_fitting_best_models(self, test_metric: str, n_best: int = 2) -> None:
         """
         Gets best performing models on the selected metric.
 
@@ -151,10 +169,10 @@ class PipelineCreator:
             "f1": f1_score,
             "precision": precision_score,
         }
-        
+
         if test_metric not in metric_function_mapping:
             raise ValueError("Invalid test metric. Choose from: 'accuracy', 'recall', 'f1', 'precision'.")
-        
+
         metric_function = metric_function_mapping[test_metric]
 
         for model_dict in self.best_models:
@@ -167,76 +185,95 @@ class PipelineCreator:
             if metric_function == "accuracy":
                 score = metric_function(self.selector.y_test, y_pred)
             else:
-                score = metric_function(self.selector.y_test, y_pred, average= "micro")
+                score = metric_function(self.selector.y_test, y_pred, average="micro")
 
             self.model_info.append({"model": model, "score": score, "name": model_dict["model_name"]})
         self.model_info = utils_find_best_performing_models(self.model_info, n_best)
 
-    def get_best_performing_models(self):
+    def print_model_info(self) -> None:
+        """
+        print the model_info dict with all params and scores.
+
+        Returns
+        -------
+        None
+        """
         for x in self.model_info:
             print(f"{x['name']} params are {x['model']}")
             print(f"{x['name']} got a score of {x['score']}")
 
-    def create_model_pipeline(self, name: str= None, index: int= None) -> Pipeline:
+    def create_model_pipeline(self, index: int) -> Pipeline:
         """
         Creates a pipeline for the selected model (either name of index is required).
 
         Parameters
         ----------
-        name: str | None
-            (optional) The name of the model.
         index: int | None
-            (optional) The index of the model in the model info list.
+            The index of the model in the model info list.
 
         Returns
         -------
         Pipeline
             model's pipeline.
         """
-        if index is not None:
-            model = self.model_info[index]["model"]
-        elif name is not None:
-            model = next((x["model"] for x in self.model_info if x["name"] == name), None)
-        else:
-            raise ValueError("you need to give either name or index")
+        if not isinstance(index, int) or index > len(self.model_info) - 1:
+            raise ValueError("Wrong index given")
 
-        pipeline = Pipeline([
-            ("imputer", self.imputer),
-            ("model", model)
-        ])
+        self.encoder = self.preprocessor.encoder
+
+        model = self.model_info[index]["model"]
+        pipeline = Pipeline([("imputer", self.imputer), ("encoder", self.encoder), ("model", model)])
 
         return pipeline
 
-    def save_model_to_pickle_file(self, file_path: str | Path, name: str = None, index: int = None, model_pipeline: Pipeline = None) -> None:
+    def save_model_to_pickle_file(
+        self, file_path: str | Path, index: int = None, model_pipeline: Pipeline = None
+    ) -> None:
         """
-        Saves a model or pipeline to a pickle file (either name or index or model_pipeline required).
+        Saves a model or pipeline to a pickle file (either index or model_pipeline required).
 
         Parameters
         ----------
         file_path: str | Path
             The path in which you want to save the file.
 
-        name: str | None
-            (optional) The name of the model.
-
         index: int
-            (optional) The index of the model in the model info list.
+            The index of the model in the model info list.
 
         model_pipeline: Pipeline
-            (optional) If you created a pipeline it can be passed here to save.
+            If you created a pipeline it can be passed here to save.
 
         Returns
         -------
         None
         """
-        if name or index:
-            pipeline = self.create_model_pipeline(name=name, index=index)
+        if index:
+            pipeline = self.create_model_pipeline(index=index)
         elif model_pipeline:
             pipeline = model_pipeline
         else:
-            raise ValueError("you need to give either name or index or pipeline")
+            raise ValueError("you need to give either index or pipeline")
 
         with open(file_path, "wb") as file:
             pickle.dump(pipeline, file)
 
         print(f"Pipeline saved to {file_path}")
+
+    @staticmethod
+    def from_pickle_to_pipeline(file_path: str | Path) -> Pipeline:
+        """
+        Reads pickle files and turns them back int pipelines
+
+        Parameters
+        ----------
+        file_path: str | Path
+            The path to the file.
+
+        Returns
+        -------
+        Pipeline: pipeline read from bytes
+        """
+        with open(file_path, "rb") as file:
+            pipeline = pickle.load(file)
+
+        return pipeline

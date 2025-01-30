@@ -9,24 +9,28 @@ from oml.preprocessing.preprocessor import Preprocessor
 
 @pytest.fixture()
 def preprocessor():
-    df = pd.DataFrame({"x": [x for x in range(10)], "y": [x for x in "aaabbbcccc"]})
-
-    preprocessor = Preprocessor(dataframe=df, target_column_name="y")
-    return preprocessor
-
-@pytest.fixture()
-def better_data_preprocessor():
     df = pd.DataFrame({"x": [x for x in range(30)], "y": [x for x in "aaabbbccccaaabbbccccaaabbbcccc"]})
 
     preprocessor = Preprocessor(dataframe=df, target_column_name="y")
     return preprocessor
 
+
 class Test_Preprocessor:
+    def test_value_error_remove_invalid_data(self):
+        with pytest.raises(expected_exception=ValueError):
+            data = {
+                "x": ["set", "set", "set", "set", "set", "vir", "vir", "vir", "vir", "vir"],
+                "y": [x for x in "aaabbbcccc"],
+            }
+            df = pd.DataFrame(data)
+            preprocessor = Preprocessor(dataframe=df, target_column_name="y")
+            preprocessor.remove_invalid_data()
+
     def test_remove_invalid_data(self, preprocessor):
-        preprocessor.df["y"] = ["a", "a", np.nan, "b", "b", "b", np.nan, "c", "c", np.nan]
+        preprocessor.df["y"] = ["a", "a", np.nan, "b", "b", "b", np.nan, "c", "c", np.nan] + [x for x in range(11, 31)]
         preprocessor.remove_invalid_data()
 
-        assert len(preprocessor.df["y"]) == 7
+        assert len(preprocessor.df["y"]) == 27
 
     def test_data_target_split(self, preprocessor):
         preprocessor.data_target_split()
@@ -54,21 +58,21 @@ class Test_Preprocessor:
         expected_mapping = {"a": 0, "b": 1, "c": 2}
         assert preprocessor.target_mapping == expected_mapping
 
-    def test_train_test_split(self, better_data_preprocessor):
-        better_data_preprocessor.data_target_split()
-        better_data_preprocessor.train_test_split(0.2)
+    def test_train_test_split(self, preprocessor):
+        preprocessor.data_target_split()
+        preprocessor.train_test_split(0.2)
 
-        assert isinstance(better_data_preprocessor.X_train, pd.DataFrame), "X_train after train_test_split must be pd.Dataframe."
-        assert better_data_preprocessor.X_train.shape == (24, 1)
-        assert better_data_preprocessor.X_test.shape == (6, 1)
-        assert better_data_preprocessor.y_train.shape == (24, 1)
-        assert better_data_preprocessor.y_test.shape == (6, 1)
+        assert isinstance(preprocessor.X_train, pd.DataFrame), "X_train after train_test_split must be pd.Dataframe."
+        assert preprocessor.X_train.shape == (24, 1)
+        assert preprocessor.X_test.shape == (6, 1)
+        assert preprocessor.y_train.shape == (24, 1)
+        assert preprocessor.y_test.shape == (6, 1)
 
-    def test_impute(self, better_data_preprocessor):
-        better_data_preprocessor.df["x"] = [1, 2, np.nan, 4, 5, np.nan, 7, 8, 9, 10] + [x for x in range(11, 31)]
-        better_data_preprocessor.data_target_split()
-        better_data_preprocessor.train_test_split()
+    def test_impute(self, preprocessor):
+        preprocessor.df["x"] = [1, 2, np.nan, 4, 5, np.nan, 7, 8, 9, 10] + [x for x in range(11, 31)]
+        preprocessor.data_target_split()
+        preprocessor.train_test_split()
 
-        better_data_preprocessor.impute()
+        preprocessor.impute()
 
-        assert all(x for x in better_data_preprocessor.data["x"] if x != np.nan)
+        assert all(x for x in preprocessor.data["x"] if x != np.nan)

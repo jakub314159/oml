@@ -28,31 +28,69 @@ pip install oml[dev]
 ```
 
 ####
-## Importing `PipelineCreator` and necessary modules
+## Tutorial made with iris dataset from sklearn
+
 ```python
-import pandas as pd
+# Importing PipelineCreator and necessary modules:
 from pathlib import Path
+
+import pandas as pd
+from sklearn.datasets import load_iris
+
 from oml.pipeline_creation import PipelineCreator
-```
 
-####
-## Prepare your data and Set up `Pipelinecreator`
-```python
+# Prepare your data
+iris = load_iris()
+iris_df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+iris_df["species"] = iris.target
+iris_df["species"] = iris_df["species"].map(dict(enumerate(iris.target_names)))
+
+# Set up PipelineCreator
 pipeline_creator = PipelineCreator(
-    dataframe= "the dataframe that will be split into data and target", 
-    target_column_name= "name of the column you want to be the target", 
-    strategy= "the strategy for the imputer for example median"
+    dataframe=iris_df,
+    target_column_name="species",
+    strategy="median"
+)
+
+# Preprocess the data and prepare `ModelSelector`
+pipeline_creator.dataframe_preprocessing(train_test_split_size=0.2)
+pipeline_creator.prepare_model_selector()
+
+# Finding best models
+pipeline_creator.find_best_models(
+    n_best=3
+)
+
+# Evaluating chosen models with the selected metric
+pipeline_creator.metric_test_and_fitting_best_models(
+    test_metric="recall",
+    n_best=2
+)
+
+# If you are not sure about which model to chose you can see all models and scores
+pipeline_creator.print_model_info()
+
+# Creating a pipeline
+pipeline = pipeline_creator.create_model_pipeline(
+    index=0
+)
+# pipeline is now your completed pipeline with model and imputer
+
+
+# Save the model into pickle format (either index or model_pipeline is required)
+pipeline_creator.save_model_to_pickle_file(
+    file_path=Path(__file__),
+    index=None,
+    model_pipeline=pipeline
 )
 ```
 ####
-## Preprocess the data and prepare `ModelSelector`
+## Getting model pipeline from pickle
 ```python
-pipeline_creator.dataframe_preprocessing(
-    test_df_size= "from 0 to 1 the size of the test"
+pipeline = pipeline_creator.from_pickle_to_pipeline(
+    file_path= Path(__file__)
 )
-pipeline_creator.prepare_model_selector()
 ```
-
 ####
 ## (Optional) You can add models or parameters to `ModelSelector`
 ```python
@@ -76,49 +114,5 @@ pipeline_creator.change_parameters_in_selector_model(
     model_name= "existing model name", 
     parameter_name= "the name of the param changed", 
     parameter_vals= "list of param values changed"
-)
-```
-
-####
-## Finding best models
-```python
-pipeline_creator.find_best_performing_models(
-    n_best = "number of best performing models you want to get"
-)
-```
-####
-## Evaluating chosen models with the selected metric
-```python
-pipeline_creator.get_n_best_scoring_models(
-    test_metric= "best soothing metric for your classification problem", 
-    n_best= "number of best performing models you want to get"
-)
-```
-
-####
-## Create a pipeline for the chosen model
-```python
-# If you are not sure about which model to chose you can see all models and scores
-pipeline_creator.get_best_performing_models()
-
-# Creating a pipeline (either name of index is required)
-pipeline = pipeline_creator.create_model_pipeline(
-    name= "(optional) The name of the model", 
-    index= "(optional) The index of the model in the model info list"
-)
-
-# pipeline is now your completed pipeline with model and imputer
-```
-
-####
-## Save the model into pickle format
-```python
-# either name or index or model_pipeline required
-
-pipeline_creator.save_model_to_pickle_file(
-    file_path= "path to the file you want to save the pipeline",
-    name= "(optional) The name of the model", 
-    index= "(optional) The index of the model in the model info list",
-    model_pipeline= "If you created a pipeline it can be passed here to save"
 )
 ```

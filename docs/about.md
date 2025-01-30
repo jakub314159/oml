@@ -8,13 +8,14 @@ This project was build to create pipelines containing the most optimal model for
 
 ## What can it do?
 This project can:  
-- turn a `pandas.Dataframe` into data and target dataframes  
-- remove invalid information from data and target  
-- map the target according to the user's preference  
-- make a train-test split on the data  
-- test out possible models for classification with different parameters and select the best ones  
-- make pipelines out of the best model configurations  
-- save the model into a file in pickle format  
+- turn a `pandas.Dataframe` into data and target dataframes.  
+- remove invalid information from data and target.  
+- map the target according to the user's preference.  
+- make a train-test split on the data.  
+- test out possible models for classification with different parameters and select the best ones.  
+- make pipelines out of the best model configurations.  
+- save the pipeline into a file in pickle format.  
+- read pickle files and turn them into pipelines.  
 
 ## What does it implement?
 The project implement 3 unique classes:

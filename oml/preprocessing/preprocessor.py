@@ -6,24 +6,27 @@ from sklearn.preprocessing import OneHotEncoder
 
 
 class Preprocessor:
+    """
+    Class used for preprocessing dataframes.
+
+    Parameters
+    ----------
+    dataframe : pd.Dataframe
+        Pandas dataframe used for preprocessing.
+
+    target_column_name: str
+        Name of the pandas column you want to set as target.
+
+    strategy: str
+        Strategy for the SimpleImputer.
+    """
+
     def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
-        """
-        Parameters
-        ----------
-        dataframe : pd.Dataframe
-            Pandas dataframe used for preprocessing.
-
-        target_column_name: str
-            Name of the pandas column you want to set as target.
-
-        strategy: str
-            Strategy for the SimpleImputer.
-        """
         self.df = dataframe
         self._raw_df = dataframe
         self.target_column_name = target_column_name
         self.imputer = SimpleImputer(missing_values=np.nan, strategy=strategy)
-        self.encoder = OneHotEncoder()
+        self.encoder = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
 
         self.data = None
         self.target = None
@@ -51,6 +54,9 @@ class Preprocessor:
 
         self.df = self.df.reset_index(drop=True)
 
+        if len(self.df) <= 20:
+            raise ValueError("Dataframe needs more than 20 valid rows.")
+
     def data_target_split(self) -> None:
         """
         Splits dataframe into 2 dataframes: data, target.
@@ -70,7 +76,13 @@ class Preprocessor:
         -------
         None
         """
-        self.data = pd.get_dummies(self.data)
+        changeable = self.data.select_dtypes(include=["object", "category"])
+
+        if len(changeable.columns) > 0:
+            encoded_array = self.encoder.fit_transform(changeable)
+            encoded_df = pd.DataFrame(encoded_array, columns=self.encoder.get_feature_names_out())
+            self.data = self.data.drop(columns=changeable.columns).reset_index(drop=True)
+            self.data = pd.concat([self.data, encoded_df], axis=1)
 
     def map_target(self) -> None:
         """
@@ -80,19 +92,17 @@ class Preprocessor:
         -------
         None
         """
-        if all([isinstance(x, int) for x in self.target]):
-            return None
+        if not all([isinstance(x, int) for x in self.target]):
+            if any([isinstance(x, int) for x in self.target]) and any([isinstance(x, str) for x in self.target]):
+                raise ValueError("The target column is not properly represented.")
 
-        if any([isinstance(x, int) for x in self.target]) and any([isinstance(x, str) for x in self.target]):
-            raise ValueError("The target column is not properly represented.")
+            mapping_val = 0
+            for value in self.target[self.target_column_name]:
+                if value not in self.target_mapping:
+                    self.target_mapping[value] = mapping_val
+                    mapping_val += 1
 
-        mapping_val = 0
-        for value in self.target[self.target_column_name]:
-            if value not in self.target_mapping:
-                self.target_mapping[value] = mapping_val
-                mapping_val += 1
-
-        self.target[self.target_column_name] = self.target[self.target_column_name].map(self.target_mapping)
+            self.target[self.target_column_name] = self.target[self.target_column_name].map(self.target_mapping)
 
     def train_test_split(self, test_size: float | None = 0.2) -> None:
         """
@@ -122,7 +132,5 @@ class Preprocessor:
         -------
         None
         """
-        # Todo 1 imputer seams to have a problem in model selector tests and doesn't impute X_test
-
         self.imputer.fit(self.X_train)
         self.X_train = self.imputer.transform(self.X_train)
