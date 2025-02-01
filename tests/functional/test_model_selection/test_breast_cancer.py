@@ -7,12 +7,11 @@ from oml.preprocessing.preprocessor import Preprocessor
 
 def test_model_selector_on_breast_cancer():
     all_data = load_breast_cancer(as_frame=True)
-    data = all_data["data"]
-    target = all_data["target"]
 
-    preprocessor = Preprocessor(dataframe=pd.DataFrame(), target_column_name="species")
-    preprocessor.data = data
-    preprocessor.target = target
+
+    preprocessor = Preprocessor(dataframe=all_data, target_column_name=None)
+    preprocessor.remove_invalid_data()
+    preprocessor.data_target_split()
     preprocessor.get_dummies()
     preprocessor.map_target()
     preprocessor.train_test_split()

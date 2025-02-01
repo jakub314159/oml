@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
+from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 class Preprocessor:
@@ -68,21 +70,21 @@ class Preprocessor:
         self.target = self.df[[self.target_column_name]]
         self.data = self.df.drop(columns=[self.target_column_name])
 
-    def get_dummies(self) -> None:
-        """
-        Pandas get_dummies on data.
-
-        Returns
-        -------
-        None
-        """
-        changeable = self.data.select_dtypes(include=["object", "category"])
-
-        if len(changeable.columns) > 0:
-            encoded_array = self.encoder.fit_transform(changeable)
-            encoded_df = pd.DataFrame(encoded_array, columns=self.encoder.get_feature_names_out())
-            self.data = self.data.drop(columns=changeable.columns).reset_index(drop=True)
-            self.data = pd.concat([self.data, encoded_df], axis=1)
+    # def get_dummies(self) -> None:
+    #     """
+    #     Pandas get_dummies on data.
+    #
+    #     Returns
+    #     -------
+    #     None
+    #     """
+    #     changeable = self.data.select_dtypes(include=["object", "category"])
+    #
+    #     if len(changeable.columns) > 0:
+    #         encoded_array = self.encoder.fit_transform(changeable)
+    #         encoded_df = pd.DataFrame(encoded_array, columns=self.encoder.get_feature_names_out())
+    #         self.data = self.data.drop(columns=changeable.columns).reset_index(drop=True)
+    #         self.data = pd.concat([self.data, encoded_df], axis=1)
 
     def map_target(self) -> None:
         """
@@ -124,13 +126,32 @@ class Preprocessor:
         self.y_train = c
         self.y_test = d
 
-    def impute(self) -> None:
-        """
-        If a value in data is None or np.nan it sets it according to the SimpleImputer strategy.
+    # def impute(self) -> None:
+    #     """
+    #     If a value in data is None or np.nan it sets it according to the SimpleImputer strategy.
+    #
+    #     Returns
+    #     -------
+    #     None
+    #     """
+    #     self.imputer.fit(self.X_train)
+    #     self.X_train = self.imputer.transform(self.X_train)
 
-        Returns
-        -------
-        None
-        """
-        self.imputer.fit(self.X_train)
-        self.X_train = self.imputer.transform(self.X_train)
+    def transform(self) -> ColumnTransformer:
+        cat_features = [x for x in self.data.select_dtypes(include=["object", "category"]).columns]
+        num_features =  [x for x in self.data.select_dtypes(include=['number']).columns]
+
+        cat_transformer = Pipeline(
+            [("encoder", OneHotEncoder(handle_unknown="ignore"))]  # Handle unseen categories in test data
+        )
+
+        num_transformer = Pipeline([("imputer", SimpleImputer(strategy="mean"))])
+
+
+        transformer =  ColumnTransformer(
+            [("cat", cat_transformer, cat_features), ("num", num_transformer, num_features)]
+        )
+
+        self.X_train = transformer.fit_transform(self.X_train)
+
+        return transformer

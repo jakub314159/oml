@@ -2,6 +2,7 @@ from pathlib import Path
 import pickle
 
 import pandas as pd
+from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score
@@ -33,6 +34,8 @@ class PipelineCreator:
         self.encoder: OneHotEncoder | None = None
         self.selector: ModelSelector | None = None
 
+        self.transformer: ColumnTransformer | None = None
+
         self.best_models = {}
         self.model_info = []
 
@@ -50,12 +53,13 @@ class PipelineCreator:
         """
         self.preprocessor.remove_invalid_data()
         self.preprocessor.data_target_split()
-        self.preprocessor.get_dummies()
+        # self.preprocessor.get_dummies()
         self.preprocessor.map_target()
         self.preprocessor.train_test_split(test_size=train_test_split_size)
-        self.preprocessor.impute()
+        # self.preprocessor.impute()
+        # self.imputer = self.preprocessor.imputer
 
-        self.imputer = self.preprocessor.imputer
+        self.transformer = self.preprocessor.transform()
 
     def prepare_model_selector(self) -> None:
         """
@@ -222,7 +226,7 @@ class PipelineCreator:
         self.encoder = self.preprocessor.encoder
 
         model = self.model_info[index]["model"]
-        pipeline = Pipeline([("imputer", self.imputer), ("encoder", self.encoder), ("model", model)])
+        pipeline = Pipeline([("transformer", self.transformer), ("model", model)])
 
         return pipeline
 
