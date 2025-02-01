@@ -139,7 +139,7 @@ class Preprocessor:
 
     def transform(self) -> ColumnTransformer:
         cat_features = [x for x in self.data.select_dtypes(include=["object", "category"]).columns]
-        num_features =  [x for x in self.data.select_dtypes(include=['number']).columns]
+        num_features = [x for x in self.data.select_dtypes(include=['number']).columns]
 
         cat_transformer = Pipeline(
             [("encoder", OneHotEncoder(handle_unknown="ignore"))]  # Handle unseen categories in test data
@@ -147,9 +147,11 @@ class Preprocessor:
 
         num_transformer = Pipeline([("imputer", SimpleImputer(strategy="mean"))])
 
-
-        transformer =  ColumnTransformer(
-            [("cat", cat_transformer, cat_features), ("num", num_transformer, num_features)]
+        transformer = ColumnTransformer(
+            [
+                ("num", num_transformer, num_features),
+                ("cat", cat_transformer, cat_features),
+            ],
         )
 
         self.X_train = transformer.fit_transform(self.X_train)

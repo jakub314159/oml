@@ -44,4 +44,5 @@ def test_model_selector_on_ghosts():
     pipeline = pipeline_creator.create_model_pipeline(index=0)
 
     assert isinstance(pipeline, Pipeline)
-    assert pipeline.predict([[0.5, 0.7, 0.5, 0.9, "white"]])
+    pred_df = pd.DataFrame(data={"bone_length": [0.64], "rotting_flesh": [0.532], "hair_length": [0.74], "has_soul": [0.89], "color": "white"})
+    assert pipeline.predict(pred_df)
