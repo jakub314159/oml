@@ -44,6 +44,4 @@ def test_model_selector_on_ghosts():
     pipeline = pipeline_creator.create_model_pipeline(index=0)
 
     assert isinstance(pipeline, Pipeline)
-    assert pipeline.steps[1] == ("encoder", pipeline_creator.preprocessor.encoder)
-    assert pipeline.steps[2] == ("model", pipeline_creator.model_info[0]["model"])
     assert pipeline.predict([[0.5, 0.7, 0.5, 0.9, "white"]])

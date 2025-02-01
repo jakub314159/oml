@@ -152,6 +152,7 @@ class PipelineCreator:
         self.best_models = self.selector.find_best_performing_models(n_best)
         return self.best_models
 
+    #Todo: change name
     def metric_test_and_fitting_best_models(self, test_metric: str, n_best: int = 2) -> None:
         """
         Gets best performing models on the selected metric.
@@ -184,14 +185,16 @@ class PipelineCreator:
             model = model_dict["model_class"](**params)
 
             model.fit(self.selector.X_train, self.selector.y_train)
-            y_pred = model.predict(self.selector.X_test)
+
+            pipeline = Pipeline([("transformer", self.transformer), ("model", model)])
+            y_pred = pipeline.predict(self.selector.X_test)
 
             if metric_function == "accuracy":
                 score = metric_function(self.selector.y_test, y_pred)
             else:
                 score = metric_function(self.selector.y_test, y_pred, average="micro")
 
-            self.model_info.append({"model": model, "score": score, "name": model_dict["model_name"]})
+            self.model_info.append({"pipeline": pipeline, "score": score})
         self.model_info = utils_find_best_performing_models(self.model_info, n_best)
 
     def print_model_info(self) -> None:
@@ -220,15 +223,16 @@ class PipelineCreator:
         Pipeline
             model's pipeline.
         """
-        if not isinstance(index, int) or index > len(self.model_info) - 1:
-            raise ValueError("Wrong index given")
-
-        self.encoder = self.preprocessor.encoder
-
-        model = self.model_info[index]["model"]
-        pipeline = Pipeline([("transformer", self.transformer), ("model", model)])
-
-        return pipeline
+        # if not isinstance(index, int) or index > len(self.model_info) - 1:
+        #     raise ValueError("Wrong index given")
+        #
+        # self.encoder = self.preprocessor.encoder
+        #
+        # model = self.model_info[index]["model"]
+        # pipeline = Pipeline([("transformer", self.transformer), ("model", model)])
+        #
+        # return pipeline
+        return self.model_info[index]["pipeline"]
 
     def save_model_to_pickle_file(
         self, file_path: str | Path, index: int = None, model_pipeline: Pipeline = None
