@@ -17,7 +17,7 @@ class PipelineCreator:
 
     Parameters
     ----------
-    dataframe: pd.Dataframe
+    dataframe: pd.DataFrame
         Dataframe that will be processed.
 
     target_column_name: str
@@ -29,9 +29,9 @@ class PipelineCreator:
 
     def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
         self.preprocessor = Preprocessor(dataframe, target_column_name, strategy)
-        self.imputer: SimpleImputer = None
-        self.encoder: OneHotEncoder = None
-        self.selector: ModelSelector = None
+        self.imputer: SimpleImputer | None = None
+        self.encoder: OneHotEncoder | None = None
+        self.selector: ModelSelector | None = None
 
         self.best_models = {}
         self.model_info = []
