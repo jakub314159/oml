@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 
-test = ["pytest", "pytest-cov"]
+test = ["pytest", "pytest-cov", "pytest-mock"]
 
 code-check = ["black"]
 

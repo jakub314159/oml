@@ -17,7 +17,8 @@ def get_predict_function(file_path: Path) -> Callable:
 
     Returns
     -------
-    Callable: predict function
+    Callable
+        Predict function
     """
     pipeline = PipelineCreator.from_pickle_to_pipeline(file_path)
 
