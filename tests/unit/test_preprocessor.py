@@ -38,26 +38,6 @@ class Test_Preprocessor:
         assert preprocessor.target.shape == (len(preprocessor.df), 1)
         assert not "y" in preprocessor.data.columns
 
-    def test_get_dummies(self):
-        data = {
-            "x": ["set", "set", "set", "set", "set", "vir", "vir", "vir", "vir", "vir"],
-            "y": [x for x in "aaabbbcccc"],
-        }
-        df = pd.DataFrame(data)
-        preprocessor = Preprocessor(dataframe=df, target_column_name="y")
-        preprocessor.data_target_split()
-
-        preprocessor.get_dummies()
-
-        assert set(preprocessor.data.columns) == {"x_set", "x_vir"}
-
-    def test_map_target(self, preprocessor):
-        preprocessor.data_target_split()
-        preprocessor.map_target()
-
-        expected_mapping = {"a": 0, "b": 1, "c": 2}
-        assert preprocessor.target_mapping == expected_mapping
-
     def test_train_test_split(self, preprocessor):
         preprocessor.data_target_split()
         preprocessor.train_test_split(0.2)
@@ -67,12 +47,3 @@ class Test_Preprocessor:
         assert preprocessor.X_test.shape == (6, 1)
         assert preprocessor.y_train.shape == (24, 1)
         assert preprocessor.y_test.shape == (6, 1)
-
-    def test_impute(self, preprocessor):
-        preprocessor.df["x"] = [1, 2, np.nan, 4, 5, np.nan, 7, 8, 9, 10] + [x for x in range(11, 31)]
-        preprocessor.data_target_split()
-        preprocessor.train_test_split()
-
-        preprocessor.impute()
-
-        assert all(x for x in preprocessor.data["x"] if x != np.nan)

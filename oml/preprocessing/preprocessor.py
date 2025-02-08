@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
+from oml import logger
+
 
 class Preprocessor:
     """
@@ -39,7 +41,10 @@ class Preprocessor:
         self.y_test = None
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(dataframe={self.df}, target_column_name={self.target_column_name}, strategy={self.strategy})"
+        return (
+            f"{self.__class__.__name__}(dataframe={self.df}, target_column_name={self.target_column_name}, "
+            f"strategy={self.strategy})"
+        )
 
     def remove_invalid_data(self) -> None:
         """
@@ -58,6 +63,8 @@ class Preprocessor:
         if len(self.df) <= 20:
             raise ValueError("Dataframe needs more than 20 valid rows.")
 
+        logger.info("invalid data was removed.")
+
     def data_target_split(self) -> None:
         """
         Splits dataframe into 2 dataframes: data, target.
@@ -66,28 +73,12 @@ class Preprocessor:
         -------
         None
         """
+        logger.info("Starting data_target_split")
+
         self.target = self.df[[self.target_column_name]]
         self.data = self.df.drop(columns=[self.target_column_name])
 
-    def map_target(self) -> None:
-        """
-        Maps target and prepares it for classification.
-
-        Returns
-        -------
-        None
-        """
-        if not all([isinstance(x, int) for x in self.target]):
-            if any([isinstance(x, int) for x in self.target]) and any([isinstance(x, str) for x in self.target]):
-                raise ValueError("The target column is not properly represented.")
-
-            mapping_val = 0
-            for value in self.target[self.target_column_name]:
-                if value not in self.target_mapping:
-                    self.target_mapping[value] = mapping_val
-                    mapping_val += 1
-
-            self.target[self.target_column_name] = self.target[self.target_column_name].map(self.target_mapping)
+        logger.info("Splitting done.")
 
     def train_test_split(self, test_size: float | None = 0.2) -> None:
         """
@@ -102,12 +93,18 @@ class Preprocessor:
         -------
         None
         """
+        logger.info(msg="starting train_test_split")
+
         a, b, c, d = train_test_split(self.data, self.target, test_size=test_size, stratify=self.target)
 
         self.X_train = a
         self.X_test = b
         self.y_train = c
         self.y_test = d
+
+        logger.info(
+            "train_test_split done. Training shape: %s, Testing shape: %s", self.X_train.shape, self.X_test.shape
+        )
 
     def transform(self) -> ColumnTransformer:
         """
@@ -132,5 +129,7 @@ class Preprocessor:
         )
 
         self.X_train = transformer.fit_transform(self.X_train)
+
+        logger.info("X_train successfully transformed.")
 
         return transformer

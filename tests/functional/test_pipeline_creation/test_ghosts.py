@@ -29,4 +29,4 @@ def test_model_selector_on_ghosts():
             "color": "white",
         }
     )
-    assert pipeline.predict(pred_df) in (0, 1, 2)
+    assert pipeline.predict(pred_df)

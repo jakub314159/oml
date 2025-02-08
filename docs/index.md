@@ -98,10 +98,7 @@ preprocessor = Preprocessor(dataframe=df, target_column_name="y")
 
 preprocessor.remove_invalid_data()
 preprocessor.data_target_split()
-preprocessor.get_dummies()
-preprocessor.map_target()
 preprocessor.train_test_split()
-preprocessor.impute()
 ```
 >Data and target from df
 ```
@@ -153,10 +150,8 @@ iris_df["species"] = iris_df["species"].map(dict(enumerate(iris.target_names)))
 preprocessor = Preprocessor(dataframe=iris_df, target_column_name="species")
 preprocessor.remove_invalid_data()
 preprocessor.data_target_split()
-preprocessor.get_dummies()
-preprocessor.map_target()
 preprocessor.train_test_split()
-preprocessor.impute()
+
 
 selector = ModelSelector(preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test)
 best_models = selector.find_best_performing_models(n_best=3)

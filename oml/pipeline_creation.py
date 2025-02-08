@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_sc
 from oml.preprocessing.preprocessor import Preprocessor
 from oml.model_selection.model_selector import ModelSelector
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
-
+from oml import logger
 
 class PipelineCreator:
     """
@@ -48,13 +48,16 @@ class PipelineCreator:
         -------
         None
         """
+        logger.info("Preprocessing starting.")
+
         self.preprocessor.remove_invalid_data()
         self.preprocessor.data_target_split()
 
-        self.preprocessor.map_target()
         self.preprocessor.train_test_split(test_size=train_test_split_size)
 
         self.transformer = self.preprocessor.transform()
+
+        logger.info("Preprocessing done.")
 
     def prepare_model_selector(self) -> None:
         """
@@ -67,6 +70,7 @@ class PipelineCreator:
         self.selector = ModelSelector(
             self.preprocessor.X_train, self.preprocessor.X_test, self.preprocessor.y_train, self.preprocessor.y_test
         )
+        logger.info("ModelSelector is prepared.")
 
     def add_models_to_selector(
         self, model_name: str, model_class, parameter_name: str = None, parameter_vals: list[int] = None
@@ -92,6 +96,7 @@ class PipelineCreator:
         self.selector.model_list = list(self.selector.models_mapping.keys())
 
         self.selector.param_mapping[model_name] = {parameter_name: parameter_vals}
+        logger.info("model added.")
 
     def add_parameters_to_selector_model(self, model_name, parameter_name: str, parameter_vals: list[int]) -> None:
         """
@@ -111,6 +116,7 @@ class PipelineCreator:
         None
         """
         self.selector.param_mapping[model_name][parameter_name] = parameter_vals
+        logger.info("parameters added.")
 
     def change_parameters_in_selector_model(self, model_name, parameter_name: str, parameter_vals: list[int]) -> None:
         """
@@ -130,6 +136,7 @@ class PipelineCreator:
         None
         """
         self.selector.param_mapping[model_name] = {parameter_name: parameter_vals}
+        logger.info("parameters changed.")
 
     def find_best_models(self, n_best: int = 3) -> list:
         """
@@ -162,6 +169,8 @@ class PipelineCreator:
         -------
         None
         """
+        logger.info("Starting pipeline fitting.")
+
         metric_function_mapping = {
             "accuracy": accuracy_score,
             "recall": recall_score,
@@ -190,6 +199,8 @@ class PipelineCreator:
 
             self.pipeline_info.append({"pipeline": pipeline, "score": score})
         self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best)
+
+        logger.info("pipelines fitted.")
 
     def print_pipeline_info(self) -> None:
         """
@@ -250,7 +261,7 @@ class PipelineCreator:
         with open(file_path, "wb") as file:
             pickle.dump(pipeline, file)
 
-        print(f"Pipeline saved to {file_path}")
+        logger.info("Pipeline saved to %s", file_path)
 
     @staticmethod
     def from_pickle_to_pipeline(file_path: str | Path) -> Pipeline:

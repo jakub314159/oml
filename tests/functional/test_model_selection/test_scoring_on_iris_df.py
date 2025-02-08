@@ -15,7 +15,6 @@ def test_model_selector_on_iris_df():
     preprocessor = Preprocessor(dataframe=iris_df, target_column_name="species")
     preprocessor.remove_invalid_data()
     preprocessor.data_target_split()
-    preprocessor.map_target()
     preprocessor.train_test_split()
 
     selector = ModelSelector(preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test)

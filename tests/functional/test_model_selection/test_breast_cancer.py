@@ -12,7 +12,6 @@ def test_model_selector_on_breast_cancer():
     preprocessor = Preprocessor(all_data, None)
     preprocessor.data = data
     preprocessor.target = target
-    preprocessor.map_target()
     preprocessor.train_test_split()
     preprocessor.transform()
 
