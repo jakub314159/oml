@@ -62,23 +62,23 @@ pipeline_creator.find_best_models(
 )
 
 # Evaluating chosen models with the selected metric
-pipeline_creator.metric_test_and_fitting_best_models(
+pipeline_creator.fit_best_pipelines(
     test_metric="recall",
     n_best=2
 )
 
 # If you are not sure about which model to chose you can see all models and scores
-pipeline_creator.print_model_info()
+pipeline_creator.print_pipeline_info()
 
 # Creating a pipeline
-pipeline = pipeline_creator.create_model_pipeline(
+pipeline = pipeline_creator.get_pipeline(
     index=0
 )
 # pipeline is now your completed pipeline with model and imputer
 
 
 # Save the model into pickle format (either index or model_pipeline is required)
-pipeline_creator.save_model_to_pickle_file(
+pipeline_creator.save_pipeline_to_pickle_file(
     file_path=Path(__file__),
     index=None,
     model_pipeline=pipeline

@@ -4,10 +4,9 @@ import pickle
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score
 
-from oml.preprocessing.preprocessor import Preprocessor, SimpleImputer
+from oml.preprocessing.preprocessor import Preprocessor
 from oml.model_selection.model_selector import ModelSelector
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
@@ -30,14 +29,12 @@ class PipelineCreator:
 
     def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
         self.preprocessor = Preprocessor(dataframe, target_column_name, strategy)
-        self.imputer: SimpleImputer | None = None
-        self.encoder: OneHotEncoder | None = None
         self.selector: ModelSelector | None = None
 
         self.transformer: ColumnTransformer | None = None
 
         self.best_models = {}
-        self.model_info = []
+        self.pipeline_info = []
 
     def dataframe_preprocessing(self, train_test_split_size: float = 0.2) -> None:
         """
@@ -53,11 +50,9 @@ class PipelineCreator:
         """
         self.preprocessor.remove_invalid_data()
         self.preprocessor.data_target_split()
-        # self.preprocessor.get_dummies()
+
         self.preprocessor.map_target()
         self.preprocessor.train_test_split(test_size=train_test_split_size)
-        # self.preprocessor.impute()
-        # self.imputer = self.preprocessor.imputer
 
         self.transformer = self.preprocessor.transform()
 
@@ -152,8 +147,7 @@ class PipelineCreator:
         self.best_models = self.selector.find_best_performing_models(n_best)
         return self.best_models
 
-    #Todo: change name
-    def metric_test_and_fitting_best_models(self, test_metric: str, n_best: int = 2) -> None:
+    def fit_best_pipelines(self, test_metric: str = "recall", n_best: int = 2) -> None:
         """
         Gets best performing models on the selected metric.
 
@@ -194,10 +188,10 @@ class PipelineCreator:
             else:
                 score = metric_function(self.selector.y_test, y_pred, average="micro")
 
-            self.model_info.append({"pipeline": pipeline, "score": score})
-        self.model_info = utils_find_best_performing_models(self.model_info, n_best)
+            self.pipeline_info.append({"pipeline": pipeline, "score": score})
+        self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best)
 
-    def print_model_info(self) -> None:
+    def print_pipeline_info(self) -> None:
         """
         print the model_info dict with all params and scores.
 
@@ -205,17 +199,17 @@ class PipelineCreator:
         -------
         None
         """
-        for x in self.model_info:
+        for x in self.pipeline_info:
             print(f"{x['name']} params are {x['model']}")
             print(f"{x['name']} got a score of {x['score']}")
 
-    def create_model_pipeline(self, index: int) -> Pipeline:
+    def get_pipeline(self, index: int) -> Pipeline:
         """
-        Creates a pipeline for the selected model (either name of index is required).
+        gets a pipeline form the pipeline info.
 
         Parameters
         ----------
-        index: int | None
+        index: int
             The index of the model in the model info list.
 
         Returns
@@ -223,18 +217,9 @@ class PipelineCreator:
         Pipeline
             model's pipeline.
         """
-        # if not isinstance(index, int) or index > len(self.model_info) - 1:
-        #     raise ValueError("Wrong index given")
-        #
-        # self.encoder = self.preprocessor.encoder
-        #
-        # model = self.model_info[index]["model"]
-        # pipeline = Pipeline([("transformer", self.transformer), ("model", model)])
-        #
-        # return pipeline
-        return self.model_info[index]["pipeline"]
+        return self.pipeline_info[index]["pipeline"]
 
-    def save_model_to_pickle_file(
+    def save_pipeline_to_pickle_file(
         self, file_path: str | Path, index: int = None, model_pipeline: Pipeline = None
     ) -> None:
         """
@@ -256,7 +241,7 @@ class PipelineCreator:
         None
         """
         if index:
-            pipeline = self.create_model_pipeline(index=index)
+            pipeline = self.get_pipeline(index=index)
         elif model_pipeline:
             pipeline = model_pipeline
         else:

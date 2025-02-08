@@ -38,7 +38,7 @@ class ModelSelector:
 
         self.model_scores = []
 
-        self.n_splits = min(min(Counter(self.y_train).values()), 5)
+        self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5
 
         self.models_mapping = {
             "logistic_regression": LogisticRegression,

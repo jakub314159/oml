@@ -22,13 +22,12 @@ def test_pipeline_creator_on_iris_df(tmp_path):
     pipeline_creator.dataframe_preprocessing()
     pipeline_creator.prepare_model_selector()
     pipeline_creator.find_best_models()
-    pipeline_creator.metric_test_and_fitting_best_models(test_metric="precision")
-    pipeline = pipeline_creator.create_model_pipeline(index=0)
-    pipeline_creator.save_model_to_pickle_file(file_path, model_pipeline=pipeline)
+    pipeline_creator.fit_best_pipelines(test_metric="precision")
+    pipeline = pipeline_creator.get_pipeline(index=0)
+    pipeline_creator.save_pipeline_to_pickle_file(file_path, model_pipeline=pipeline)
 
     saved_pipeline = pipeline_creator.from_pickle_to_pipeline(file_path=file_path)
 
     assert isinstance(pipeline, Pipeline)
-    assert pipeline.steps[2] == ("model", pipeline_creator.model_info[0]["model"])
     assert file_path.exists(), "asserting that the path exists"
     assert isinstance(saved_pipeline, Pipeline)

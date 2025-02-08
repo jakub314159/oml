@@ -204,11 +204,11 @@ pipeline_creator.dataframe_preprocessing(train_test_split_size=0.2)
 pipeline_creator.prepare_model_selector()
 
 pipeline_creator.find_best_models(n_best=3)
-pipeline_creator.metric_test_and_fitting_best_models(test_metric="recall")
+pipeline_creator.fit_best_pipelines(test_metric="recall")
 
-pipeline_creator.print_model_info()
+pipeline_creator.print_pipeline_info()
 
-pipeline = pipeline_creator.create_model_pipeline(index=0)
+pipeline = pipeline_creator.get_pipeline(index=0)
 print(pipeline)
 ```
 >Example Output
