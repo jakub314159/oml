@@ -150,9 +150,10 @@ class PipelineCreator:
 
         Returns
         -------
-        None
+        list: Best models list
         """
         self.best_models = self.selector.find_best_performing_models(n_best)
+
         return self.best_models
 
     def fit_best_pipelines(self, test_metric: str = "recall", n_best: int = 2) -> None:
@@ -252,7 +253,7 @@ class PipelineCreator:
         -------
         None
         """
-        if index:
+        if index is not None:
             pipeline = self.get_pipeline(index=index)
         elif model_pipeline:
             pipeline = model_pipeline

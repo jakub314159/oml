@@ -27,6 +27,3 @@ class TestOutputPrediction:
     def test_get_predict_function_with_pd_df(self, mocked_pred_func):
         prediction = mocked_pred_func(pd.DataFrame({"x": [1, 2], "y": [3, 4]}))
         assert prediction == ["Ghost", "Ghost"]
-
-
-# pytest tests/unit --cov=oml --cov-report=term-missing

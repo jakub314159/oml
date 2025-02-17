@@ -5,6 +5,7 @@ from sklearn.datasets import load_iris
 
 from oml.pipeline_creation import PipelineCreator
 
+
 def save_pipeline(file_path: Path) -> None:
     """
     Saves pipeline into desired file_path
@@ -35,5 +36,6 @@ def save_pipeline(file_path: Path) -> None:
     pipeline_creator.fit_best_pipelines(test_metric="precision")
     pipeline = pipeline_creator.get_pipeline(index=0)
     pipeline_creator.save_pipeline_to_pickle_file(file_path, model_pipeline=pipeline)
+
 
 save_pipeline(Path(__file__))
