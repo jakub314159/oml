@@ -8,8 +8,28 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 
+from oml.utils.utils_finding_best_models import utils_find_best_performing_models
+
 
 class ModelSelector:
+    """
+    Class used for selecting the best performing models.
+
+    Parameters
+    ----------
+    X_train: np.array
+        X_train from train_test_split
+
+    X_test: np.array
+        X_test from train_test_split
+
+    y_train: np.array
+        y_train from train_test_split
+
+    y_test: np.array
+        y_test from train_test_split
+    """
+
     def __init__(self, X_train, X_test, y_train, y_test):
         self.X_train = X_train
         self.X_test = X_test
@@ -18,16 +38,17 @@ class ModelSelector:
 
         self.model_scores = []
 
-        self.n_splits = min(min(Counter(self.y_train).values()), 5)
+        self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5
 
-        self.model_list = ["logistic_regression", "KNN", "decision_tree_classification", "random_forests", "svc"]
-        self._models_mapping = {
+        self.models_mapping = {
             "logistic_regression": LogisticRegression,
             "KNN": KNeighborsClassifier,
             "decision_tree_classification": DecisionTreeClassifier,
             "random_forests": RandomForestClassifier,
             "svc": SVC,
         }
+
+        self.model_list = list(self.models_mapping.keys())
 
         self.param_mapping = {
             "logistic_regression": {"max_iter": [50, 80, 100, 120, 150]},
@@ -37,10 +58,22 @@ class ModelSelector:
             "svc": {"degree": [2, 3, 4, 5, 6]},
         }
 
-    def get_all_model_scores(self, model_name: str):
+    def get_all_model_scores(self, model_name: str) -> None:
+        """
+        Gets scores from all parameters on the train test values.
+
+        Parameters
+        ----------
+        model_name: str
+            The name of the model that will be tested.
+
+        Returns
+        -------
+        None
+        """
         params = self.param_mapping[model_name]
         combinations = [dict(zip(params.keys(), combination)) for combination in product(*params.values())]
-        class_name = self._models_mapping[model_name]
+        class_name = self.models_mapping[model_name]
 
         for combination in combinations:
             model = class_name(**combination)
@@ -48,26 +81,29 @@ class ModelSelector:
             scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits)
             score = sum(scores) / len(scores)
 
-            self.model_scores.append({"model_name": model_name, "params": combination, "score": score})
+            self.model_scores.append(
+                {
+                    "model_name": model_name,
+                    "model_class": self.models_mapping[model_name],
+                    "params": combination,
+                    "score": score,
+                }
+            )
 
-    def find_best_performing_models(self, n_best: int = 3):
+    def find_best_performing_models(self, n_best: int = 3) -> list:
+        """
+        Sorts all the model scores and return n_best.
+
+        Parameters
+        ----------
+        n_best: int = 3
+            The number of scores returned.
+
+        Returns
+        -------
+        dict: The scores
+        """
         for model_name in self.model_list:
             self.get_all_model_scores(model_name)
 
-        return sorted(self.model_scores, key=lambda x: x.get("score"), reverse= True)[:n_best]
-
-if __name__ == "__main__":
-    import pandas as pd
-
-    from oml.preprocessing.preprocessor import Preprocessor
-
-    df = pd.DataFrame({"x": [x for x in range(60)], "y": [x for x in "aaabbbccccaaabbbccccaaabbbccccaaabbbccccaaabbbccccaaabbbcccc"]})
-
-    preprocessor = Preprocessor(dataframe=df, target_column_name="y")
-    preprocessor.data_target_split()
-    preprocessor.map_target()
-    preprocessor.train_test_split()
-
-    selector = ModelSelector(preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test)
-    best_models = selector.find_best_performing_models()
-    print("")
+        return utils_find_best_performing_models(self.model_scores, n_best)

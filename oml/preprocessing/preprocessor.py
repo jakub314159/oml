@@ -1,28 +1,35 @@
-from sklearn.datasets import load_iris
 import pandas as pd
-import numpy as np
+from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+
+from oml import logger
 
 
 class Preprocessor:
+    """
+    Class used for preprocessing dataframes.
+
+    Parameters
+    ----------
+    dataframe : pd.Dataframe
+        Pandas dataframe used for preprocessing.
+
+    target_column_name: str
+        Name of the pandas column you want to set as target.
+
+    strategy: str
+        Strategy for the SimpleImputer.
+    """
+
     def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
-        """
-        Parameters
-        ----------
-        dataframe : pd.Dataframe
-            Pandas dataframe used for preprocessing.
-
-        target_column_name: str
-            Name of the pandas column you want to set as target.
-
-        strategy: str
-            Strategy for the SimpleImputer.
-        """
-        self.df = dataframe
         self._raw_df = dataframe
+        self.df = dataframe
+
         self.target_column_name = target_column_name
-        self.imputer = SimpleImputer(missing_values=np.nan, strategy=strategy)
+        self.strategy = strategy
 
         self.data = None
         self.target = None
@@ -34,7 +41,10 @@ class Preprocessor:
         self.y_test = None
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(dataframe={self.df}, target_column_name={self.target_column_name}, strategy={self.imputer.strategy})"
+        return (
+            f"{self.__class__.__name__}(dataframe={self.df}, target_column_name={self.target_column_name}, "
+            f"strategy={self.strategy})"
+        )
 
     def remove_invalid_data(self) -> None:
         """
@@ -50,6 +60,11 @@ class Preprocessor:
 
         self.df = self.df.reset_index(drop=True)
 
+        if len(self.df) <= 20:
+            raise ValueError("Dataframe needs more than 20 valid rows.")
+
+        logger.info("invalid data was removed.")
+
     def data_target_split(self) -> None:
         """
         Splits dataframe into 2 dataframes: data, target.
@@ -58,40 +73,12 @@ class Preprocessor:
         -------
         None
         """
+        logger.info("Starting data_target_split")
+
         self.target = self.df[[self.target_column_name]]
         self.data = self.df.drop(columns=[self.target_column_name])
 
-    def get_dummies(self) -> None:
-        """
-        Pandas get_dummies on data.
-
-        Returns
-        -------
-        None
-        """
-        self.data = pd.get_dummies(self.data)
-
-    def map_target(self) -> None:
-        """
-        Maps target and prepares it for classification.
-
-        Returns
-        -------
-        None
-        """
-        if all([isinstance(x, int) for x in self.target]):
-            return None
-
-        if any([isinstance(x, int) for x in self.target]) and any([isinstance(x, str) for x in self.target]):
-            raise ValueError("The target column is not properly represented.")
-
-        mapping_val = 0
-        for value in self.target[self.target_column_name]:
-            if value not in self.target_mapping:
-                self.target_mapping[value] = mapping_val
-                mapping_val += 1
-
-        self.target[self.target_column_name] = self.target[self.target_column_name].map(self.target_mapping)
+        logger.info("Splitting done.")
 
     def train_test_split(self, test_size: float | None = 0.2) -> None:
         """
@@ -106,6 +93,8 @@ class Preprocessor:
         -------
         None
         """
+        logger.info(msg="starting train_test_split")
+
         a, b, c, d = train_test_split(self.data, self.target, test_size=test_size, stratify=self.target)
 
         self.X_train = a
@@ -113,46 +102,34 @@ class Preprocessor:
         self.y_train = c
         self.y_test = d
 
-    def impute(self) -> None:
+        logger.info(
+            "train_test_split done. Training shape: %s, Testing shape: %s", self.X_train.shape, self.X_test.shape
+        )
+
+    def transform(self) -> ColumnTransformer:
         """
-        If a value in data is None or np.nan it sets it according to the SimpleImputer strategy.
+        Imputes and encodes data according to the strategy.
 
         Returns
         -------
-        None
+        ColumnTransformer: Transformer for the data.
         """
-        #Todo 1 imputer seams to have a problem in model selector tests and doesn't impute X_test
+        cat_features = list(self.data.select_dtypes(include=["object", "category"]).columns)
+        num_features = list(self.data.select_dtypes(include=["number"]).columns)
 
-        self.imputer.fit(self.X_train)
-        self.X_train = self.imputer.transform(self.X_train)
+        cat_transformer = Pipeline([("encoder", OneHotEncoder(handle_unknown="ignore"))])
 
-    def process(self) -> pd.DataFrame:
-        """
-        Calls all the class methods at once.
+        num_transformer = Pipeline([("imputer", SimpleImputer(strategy=self.strategy))])
 
-        Returns
-        -------
-        pd.Dataframe: X_train, X_test, y_train, y_test
-        """
-        self.remove_invalid_data()
-        self.data_target_split()
-        self.get_dummies()
-        self.map_target()
-        self.data_target_split()
-        self.impute()
+        transformer = ColumnTransformer(
+            [
+                ("num", num_transformer, num_features),
+                ("cat", cat_transformer, cat_features),
+            ],
+        )
 
-        return self.X_train, self.X_test, self.y_train, self.y_test
+        self.X_train = transformer.fit_transform(self.X_train)
 
+        logger.info("X_train successfully transformed.")
 
-if __name__ == "__main__":
-    iris = load_iris()
-    iris_df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
-
-    iris_df["species"] = iris.target
-    iris_df["species"] = iris_df["species"].map(dict(enumerate(iris.target_names)))
-
-    processor = Preprocessor(iris_df, "species")
-    processor.remove_invalid_data()
-    processor.data_target_split()
-    processor.map_target()
-    print(processor.train_test_split())
+        return transformer
