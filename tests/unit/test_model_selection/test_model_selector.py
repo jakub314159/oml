@@ -1,7 +1,5 @@
-import numpy as np
-import pandas as pd
 import pytest
-from oml.model_selection.model_selector import ModelSelector
+from oml.classification.model_selection.model_selector import ModelSelector
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
 

@@ -6,8 +6,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score
 
-from oml.preprocessing.preprocessor import Preprocessor
-from oml.model_selection.model_selector import ModelSelector
+from oml.classification.preprocessing import Preprocessor
+from oml.classification.model_selection.model_selector import ModelSelector
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 from oml import logger
 

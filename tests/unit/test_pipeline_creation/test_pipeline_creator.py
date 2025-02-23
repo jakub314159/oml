@@ -4,9 +4,9 @@ import pytest
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-from oml.pipeline_creation import PipelineCreator
-from oml.preprocessing.preprocessor import Preprocessor
-from oml.model_selection.model_selector import ModelSelector
+from oml.classification.pipeline_creation import PipelineCreator
+from oml.classification.preprocessing import Preprocessor
+from oml.classification.model_selection.model_selector import ModelSelector
 from oml import logger
 
 @pytest.fixture

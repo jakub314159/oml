@@ -86,13 +86,16 @@ OML is the optimization for machine learning workflows. Here's how you can use i
 28  28    c
 29  29    c
 ```
+
 ```python
 import pandas as pd
 import numpy as np
 
-from oml.preprocessing.preprocessor import Preprocessor
+from oml.classification.preprocessing import Preprocessor
 
-df = pd.DataFrame({"x": [x for x in range(30)], "y": ["a", "a", np.nan, "b", "b", "b", np.nan, "c", "c", np.nan] + [x for x in "aaabbbccccaaabbbcccc"]})
+df = pd.DataFrame({"x": [x for x in range(30)],
+                   "y": ["a", "a", np.nan, "b", "b", "b", np.nan, "c", "c", np.nan] + [x for x in
+                                                                                       "aaabbbccccaaabbbcccc"]})
 
 preprocessor = Preprocessor(dataframe=df, target_column_name="y")
 
@@ -134,12 +137,13 @@ Data:      Target:
 ```
 ## Example use of ModelSelector
 >Example Input
+
 ```python
 from sklearn.datasets import load_iris
 import pandas as pd
 
-from oml.model_selection.model_selector import ModelSelector
-from oml.preprocessing.preprocessor import Preprocessor
+from oml.classification.model_selection.model_selector import ModelSelector
+from oml.classification.preprocessing import Preprocessor
 
 iris = load_iris()
 
@@ -151,7 +155,6 @@ preprocessor = Preprocessor(dataframe=iris_df, target_column_name="species")
 preprocessor.remove_invalid_data()
 preprocessor.data_target_split()
 preprocessor.train_test_split()
-
 
 selector = ModelSelector(preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test)
 best_models = selector.find_best_performing_models(n_best=3)
@@ -185,7 +188,7 @@ print(best_models)
 import pandas as pd
 from sklearn.datasets import load_iris
 
-from oml.pipeline_creation import PipelineCreator
+from oml.classification.pipeline_creation import PipelineCreator
 
 iris = load_iris()
 

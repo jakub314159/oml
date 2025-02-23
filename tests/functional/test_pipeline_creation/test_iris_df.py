@@ -1,10 +1,8 @@
-from pathlib import Path
-
 from sklearn.datasets import load_iris
 from sklearn.pipeline import Pipeline
 import pandas as pd
 
-from oml.pipeline_creation import PipelineCreator
+from oml.classification.pipeline_creation import PipelineCreator
 
 
 def test_pipeline_creator_on_iris_df(tmp_path):

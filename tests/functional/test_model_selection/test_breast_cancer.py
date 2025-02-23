@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 
-from oml.model_selection.model_selector import ModelSelector
-from oml.preprocessing.preprocessor import Preprocessor
+from oml.classification.model_selection.model_selector import ModelSelector
+from oml.classification.preprocessing import Preprocessor
 
 
 def test_model_selector_on_breast_cancer():

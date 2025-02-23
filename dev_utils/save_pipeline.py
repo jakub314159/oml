@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.datasets import load_iris
 
-from oml.pipeline_creation import PipelineCreator
+from oml.classification.pipeline_creation import PipelineCreator
 
 
 def save_pipeline(file_path: Path) -> None:

@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.compose import ColumnTransformer
 
 from oml import logger
-from oml.preprocessing.preprocessor import Preprocessor
+from oml.classification.preprocessing import Preprocessor
 
 
 @pytest.fixture

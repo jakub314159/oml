@@ -3,7 +3,7 @@ from pathlib import Path
 from sklearn.pipeline import Pipeline
 import pandas as pd
 
-from oml.pipeline_creation import PipelineCreator
+from oml.classification.pipeline_creation import PipelineCreator
 
 _here = Path(__file__).parent
 

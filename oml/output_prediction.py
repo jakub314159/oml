@@ -3,7 +3,7 @@ from typing import Callable
 
 import pandas as pd
 
-from oml.pipeline_creation import PipelineCreator
+from oml.classification.pipeline_creation import PipelineCreator
 
 
 def get_predict_function(file_path: Path) -> Callable:
