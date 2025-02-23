@@ -90,7 +90,7 @@ class ModelSelector:
                 }
             )
 
-    def find_best_performing_models(self, n_best: int = 3) -> list:
+    def find_best_performing_models(self, n_best: int = 3) -> list[dict]:
         """
         Sorts all the model scores and return n_best.
 
@@ -101,7 +101,8 @@ class ModelSelector:
 
         Returns
         -------
-        dict: The scores
+        list[dict]
+            The list of the best models and their info.
         """
         for model_name in self.model_list:
             self.get_all_model_scores(model_name)
