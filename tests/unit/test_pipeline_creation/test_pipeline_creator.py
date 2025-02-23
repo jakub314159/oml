@@ -19,37 +19,40 @@ def preprocessor(mocker, mock_train_test_data):
     return preprocessor
 
 @pytest.fixture
-def selector(mocker, model_scores):
+def selector(mocker, model_scores, mock_train_test_data):
     selector = mocker.MagicMock(ModelSelector)
     selector.find_best_performing_models.return_value = model_scores
 
     selector.models_mapping = {"b": "b"}
     selector.param_mapping = {"b": {"b": "b"}}
 
+    selector.X_train, selector.X_test, selector.y_train, selector.y_test = mock_train_test_data
+
     return selector
 
 @pytest.fixture
-def model_scores():
+def model_scores(mocker):
     return [
         {
             "model_name": "KNN",
-            "model_class": "KNN",
-            "params": "knn_params",
+            "model_class": mocker.MagicMock(),
+            "params": {"a": [1, 2, 3]},
             "score": 0.9,
         },
         {
-            "model_name": "Logistic",
-            "model_class": "Logistic",
-            "params": "logistic_params",
+            "model_name": "KNN",
+            "model_class": mocker.MagicMock(),
+            "params": {"a": [1, 2, 3]},
             "score": 0.85,
         },
     ]
 
+@pytest.fixture
+def pipeline(mocker):
+    return mocker.MagicMock(Pipeline)
 
 @pytest.fixture
-def pipeline_creator(mock_dataframe, preprocessor, mocker, selector, model_scores):
-    pipeline = mocker.MagicMock(Pipeline)
-
+def pipeline_creator(mock_dataframe, preprocessor, mocker, selector, model_scores, pipeline):
     mocker.patch("oml.pipeline_creation.Preprocessor", return_value= preprocessor)
     mocker.patch("oml.pipeline_creation.ModelSelector", return_value= selector)
 
@@ -57,13 +60,6 @@ def pipeline_creator(mock_dataframe, preprocessor, mocker, selector, model_score
     pipeline_creator.pipeline_info = [{"pipeline": pipeline}]
 
     return pipeline_creator
-
-@pytest.fixture
-def fit_pipeline_creator(pipeline_creator):
-    pipeline_creator.pipeline_info = []
-
-    return pipeline_creator
-
 
 class TestPipelineCreator:
     def test_dataframe_preprocessing(self, pipeline_creator, mocker):
@@ -112,39 +108,62 @@ class TestPipelineCreator:
 
         assert pipeline_creator.selector.param_mapping["b"] == {"b": "a"}
 
-    def test_find_best_models(self, pipeline_creator, model_scores):
+    def test_find_best_models(self, pipeline_creator, model_scores, mocker):
+        mocker.patch.object(logger, "info")
+
+        pipeline_creator.prepare_model_selector()
         best_models = pipeline_creator.find_best_models(2)
 
         assert best_models == model_scores
 
-    def test_fit_best_pipelines(self, fit_pipeline_creator, mocker):
+    @pytest.mark.parametrize("metric", ["accuracy", "recall"])
+    def test_fit_best_pipelines(self, pipeline_creator, mocker, model_scores, metric):
+        mocker.patch("oml.pipeline_creation.recall_score", return_value = 1)
+        mocker.patch("oml.pipeline_creation.accuracy_score", return_value = 1)
         mocker.patch.object(logger, "info")
-        fit_pipeline_creator.fit_best_pipelines()
-        assert len(fit_pipeline_creator.pipeline_info) > 0
 
+        pipeline_creator.pipeline_info = []
+
+        pipeline_creator.prepare_model_selector()
+        pipeline_creator.best_models = model_scores
+
+        pipeline_creator.fit_best_pipelines(test_metric= metric)
+        assert len(pipeline_creator.pipeline_info) > 0
+    def test_fit_best_pipelines_value_error(self, pipeline_creator, mocker):
+        mocker.patch.object(logger, "info")
+
+        with pytest.raises(ValueError) as e:
+            pipeline_creator.fit_best_pipelines(test_metric="error")
+
+        assert str(e.value) == "Invalid test metric. Choose from: 'accuracy', 'recall', 'f1', 'precision'."
 
     def test_get_pipeline(self, pipeline_creator):
         returned_pipeline = pipeline_creator.get_pipeline(0)
 
         assert pipeline_creator.pipeline_info[0]["pipeline"] == returned_pipeline
 
-    def test_save_pipeline_to_pickle_file_index(self, pipeline_creator, mocker):
+    @pytest.mark.parametrize("form", [{"index": 0}, {"model_pipeline": "pipeline"}])
+    def test_save_pipeline_to_pickle_file(self, pipeline_creator, mocker, caplog, form):
+        mocker.patch("oml.pipeline_creation.open")
+        mocker.patch("oml.pipeline_creation.pickle.dump")
+
+        path = "filepath"
+
+        pipeline_creator.save_pipeline_to_pickle_file(file_path=path, **form)
+        assert f"Pipeline saved to {path}" in caplog.text
+
+    def test_save_pipeline_to_pickle_file_value_error(self, pipeline_creator, mocker):
         mocker.patch.object(logger, "info")
 
-        path = mocker.MagicMock(Path)
+        with pytest.raises(expected_exception= ValueError) as e:
+            pipeline_creator.save_pipeline_to_pickle_file(file_path=mocker.MagicMock(Path))
 
-        pipeline_creator.save_pipeline_to_pickle_file(file_path=path, index=0)
-        logger.info.assert_called_with(f"Pipeline saved to {path}")
+        assert str(e.value) == "you need to give either index or pipeline"
 
-    def test_save_pipeline_to_pickle_file_pipeline(self, pipeline_creator, mocker):
-        mocker.patch.object(logger, "info")
-    
-        path = mocker.MagicMock(Path)
-    
-        pipeline_creator.save_pipeline_to_pickle_file(file_path=path, model_pipeline= mocker.MagicMock(Pipeline))
-        logger.info.assert_called_with(f"Pipeline saved to {path}")
+    def test_from_pickle_to_pipeline(self, pipeline_creator, mocker, pipeline):
+        mocker.patch("oml.pipeline_creation.open")
+        mocker.patch("oml.pipeline_creation.pickle.load", return_value = pipeline)
 
-    def test_from_pickle_to_pipeline(self, pipeline_creator, mocker):
         path = mocker.MagicMock(Path)
 
         pipeline = pipeline_creator.from_pickle_to_pipeline(path)
