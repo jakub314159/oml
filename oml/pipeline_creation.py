@@ -194,7 +194,7 @@ class PipelineCreator:
             pipeline = Pipeline([("transformer", self.transformer), ("model", model)])
             y_pred = pipeline.predict(self.selector.X_test)
 
-            if metric_function == "accuracy":
+            if test_metric == "accuracy":
                 score = metric_function(self.selector.y_test, y_pred)
             else:
                 score = metric_function(self.selector.y_test, y_pred, average="micro")

@@ -1,4 +1,4 @@
-def utils_find_best_performing_models(model_scores, n_best: int = 3) -> list:
+def utils_find_best_performing_models(model_scores, n_best: int = 3) -> list[dict]:
     """
     Sorts model_scores by the scores in the dict.
 
@@ -12,6 +12,7 @@ def utils_find_best_performing_models(model_scores, n_best: int = 3) -> list:
 
     Returns
     -------
-    list: The sorted list
+    list[dict]
+        The sorted list
     """
     return sorted(model_scores, key=lambda x: x.get("score"), reverse=True)[:n_best]
