@@ -1,10 +1,28 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from oml import logger
 
 
 class BasePreprocessor:
+    """
+    The parent of Preprocessor used for creating classification and regression versions.
+
+    Parameters
+    ----------
+    dataframe : pd.Dataframe
+        Pandas dataframe used for preprocessing.
+
+    target_column_name: str
+        Name of the pandas column you want to set as target.
+
+    strategy: str
+        Strategy for the SimpleImputer.
+    """
 
     def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
         self._raw_df = dataframe
@@ -20,7 +38,6 @@ class BasePreprocessor:
         self.X_test = None
         self.y_train = None
         self.y_test = None
-
 
     def __repr__(self):
         return (
@@ -62,7 +79,6 @@ class BasePreprocessor:
 
         logger.info("Splitting done.")
 
-
     def train_test_split(self, test_size: float | None = 0.2) -> None:
         """
         Splits data and target into train and test according to the test_size.
@@ -88,3 +104,33 @@ class BasePreprocessor:
         logger.info(
             "train_test_split done. Training shape: %s, Testing shape: %s", self.X_train.shape, self.X_test.shape
         )
+
+    def transform(self) -> ColumnTransformer:
+        """
+        Imputes and encodes data according to the strategy.
+
+        Returns
+        -------
+        ColumnTransformer: Transformer for the data.
+        """
+        num_features = list(self.data.select_dtypes(include=["number"]).columns)
+        cat_features = list(self.data.select_dtypes(include=["object", "category"]).columns)
+
+        num_transformer = Pipeline([("imputer", SimpleImputer(strategy=self.strategy)), ("scaler", StandardScaler())])
+
+        cat_transformer = Pipeline(
+            [("imputer", SimpleImputer(strategy="most_frequent")), ("encoder", OneHotEncoder(handle_unknown="ignore"))]
+        )
+
+        transformer = ColumnTransformer(
+            [
+                ("num", num_transformer, num_features),
+                ("cat", cat_transformer, cat_features),
+            ],
+        )
+
+        self.X_train = transformer.fit_transform(self.X_train)
+
+        logger.info("X_train successfully transformed.")
+
+        return transformer

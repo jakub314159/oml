@@ -6,8 +6,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score
 
-from oml.classification.preprocessing import Preprocessor
-from oml.classification.model_selection.model_selector import ModelSelector
+from oml.classification.preprocessing.preprocessor import ClassificationPreprocessor
+from oml.classification.model_selection.model_selector import ClassificationModelSelector
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 from oml import logger
 
@@ -29,8 +29,8 @@ class PipelineCreator:
     """
 
     def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
-        self.preprocessor = Preprocessor(dataframe, target_column_name, strategy)
-        self.selector: ModelSelector | None = None
+        self.preprocessor = ClassificationPreprocessor(dataframe, target_column_name, strategy)
+        self.selector: ClassificationModelSelector | None = None
 
         self.transformer: ColumnTransformer | None = None
 
@@ -68,7 +68,7 @@ class PipelineCreator:
         -------
         None
         """
-        self.selector = ModelSelector(
+        self.selector = ClassificationModelSelector(
             self.preprocessor.X_train, self.preprocessor.X_test, self.preprocessor.y_train, self.preprocessor.y_test
         )
         logger.info("ModelSelector is prepared.")

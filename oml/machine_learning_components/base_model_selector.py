@@ -1,15 +1,29 @@
+from collections import Counter
 from itertools import product
 
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.tree import DecisionTreeRegressor
-
-from sklearn.metrics import r2_score
+from sklearn.model_selection import cross_val_score
 
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
-
 class BaseModelSelector:
+    """
+    The parent of ModelSelector used for creating classification and regression versions.
+
+    Attributes
+    ----------
+    X_train: np.array
+        X_train from train_test_split
+
+    X_test: np.array
+        X_test from train_test_split
+
+    y_train: np.array
+        y_train from train_test_split
+
+    y_test: np.array
+        y_test from train_test_split
+    """
+
     def __init__(self, X_train, X_test, y_train, y_test):
         self.X_train = X_train
         self.X_test = X_test
@@ -18,19 +32,13 @@ class BaseModelSelector:
 
         self.model_scores = []
 
-        self.models_mapping = {
-            "linear_regression": LinearRegression,
-            "polynomial_regression": PolynomialFeatures,
-            "decision_tree_regression": DecisionTreeRegressor,
-        }
+        self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5
 
-        self.model_list = list(self.models_mapping.keys())
+        self.models_mapping = {}
+        self.model_list = []
 
-        self.param_mapping = {
-            "linear_regression": {"fit_intercept": [True, False]},
-            "polynomial_regression": {"degree": [2, 3, 5, 7, 8, 10]},
-            "decision_tree_regression": {"max_depth": [2, 3, 5, 7, 8, 10, 12]},
-        }
+        self.param_mapping = {}
+
     def get_all_model_scores(self, model_name: str) -> None:
         """
         Gets scores from all parameters on the train test values.
@@ -51,15 +59,14 @@ class BaseModelSelector:
         for combination in combinations:
             model = class_name(**combination)
 
-            model.fit(self.X_train, self.y_train)
-
-            prediction = model.predict(self.X_test)
-            score = r2_score(self.X_test, prediction)
+            scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits)
+            score = sum(scores) / len(scores)
 
             self.model_scores.append(
                 {
                     "model_name": model_name,
-                    "model": model,
+                    "model_class": self.models_mapping[model_name],
+                    "params": combination,
                     "score": score,
                 }
             )
