@@ -4,7 +4,7 @@ import pickle
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score, r2_score
+from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score, root_mean_squared_error
 
 from oml.machine_learning_components.base_preprocessor import BasePreprocessor
 from oml.classification.model_selection.model_selector import ClassificationModelSelector
@@ -212,7 +212,7 @@ class PipelineCreator:
                 metric_function = metric_function_mapping[test_metric]
 
             case "regression":
-                metric_function = r2_score
+                metric_function = root_mean_squared_error
 
             case _:
                 raise ValueError("incorrect goal.")
@@ -229,10 +229,21 @@ class PipelineCreator:
             if test_metric == "accuracy":
                 score = metric_function(self.selector.y_test, y_pred)
             else:
-                score = metric_function(self.selector.y_test, y_pred, average="micro")
+                match self.goal:
+                    case "classification":
+                        score = metric_function(self.selector.y_test, y_pred, average="micro")
+                    case "regression":
+                        score = metric_function(self.selector.y_test, y_pred)
+                    case _:
+                        raise ValueError("incorrect goal.")
 
             self.pipeline_info.append({"pipeline": pipeline, "score": score})
-        self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best)
+
+        match self.goal:
+            case "classification":
+                self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best)
+            case "regression":
+                self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best, True)
 
         logger.info("pipelines fitted.")
 

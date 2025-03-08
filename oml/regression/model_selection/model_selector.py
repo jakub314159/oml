@@ -1,3 +1,4 @@
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
@@ -28,6 +29,7 @@ class RegressionModelSelector(BaseModelSelector):
         self.models_mapping = {
             "linear_regression": LinearRegression,
             "decision_tree_regression": DecisionTreeRegressor,
+            "random_forest_regressor": RandomForestRegressor,
         }
 
         self.model_list = list(self.models_mapping.keys())
@@ -35,4 +37,5 @@ class RegressionModelSelector(BaseModelSelector):
         self.param_mapping = {
             "linear_regression": {"fit_intercept": [True, False]},
             "decision_tree_regression": {"max_depth": [2, 3, 5, 7, 8, 10, 12]},
+            "random_forest_regressor": {"n_estimators": [10, 30, 50, 70, 80, 100, 110]},
         }
