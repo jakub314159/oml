@@ -61,7 +61,7 @@ def pipeline_creator(mock_dataframe, preprocessor, mocker, selector, model_score
     mocker.patch("oml.machine_learning_components.base_preprocessor.BasePreprocessor", return_value=preprocessor)
     mocker.patch("oml.classification.pipeline_creation.ClassificationModelSelector", return_value=selector)
 
-    pipeline_creator = PipelineCreator(dataframe=mock_dataframe, target_column_name="target")
+    pipeline_creator = PipelineCreator(dataframe=mock_dataframe, target_column_name="target", goal= "classification")
     pipeline_creator.pipeline_info = [{"pipeline": pipeline}]
 
     return pipeline_creator
@@ -142,7 +142,7 @@ class TestPipelineCreator:
         with pytest.raises(ValueError) as e:
             pipeline_creator.fit_best_pipelines(test_metric="error")
 
-        assert str(e.value) == "Invalid test metric. Choose from: 'accuracy', 'recall', 'f1', 'precision'."
+        assert str(e.value) == "Invalid test metric. Choose 'accuracy', 'recall', 'f1', 'precision' for classification."
 
     def test_get_pipeline(self, pipeline_creator):
         returned_pipeline = pipeline_creator.get_pipeline(0)

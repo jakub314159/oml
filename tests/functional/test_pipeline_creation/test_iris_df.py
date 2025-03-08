@@ -17,6 +17,7 @@ def test_pipeline_creator_on_iris_df(tmp_path):
     pipeline_creator = PipelineCreator(
         dataframe=iris_df,
         target_column_name="species",
+        goal = "classification",
     )
 
     pipeline_creator.dataframe_preprocessing()
