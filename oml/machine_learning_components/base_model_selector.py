@@ -5,6 +5,7 @@ from sklearn.model_selection import cross_val_score
 
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
+
 class BaseModelSelector:
     """
     The parent of ModelSelector used for creating classification and regression versions.
@@ -32,7 +33,7 @@ class BaseModelSelector:
 
         self.model_scores = []
 
-        self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5
+        self.n_splits = 5
 
         self.models_mapping = {}
         self.model_list = []

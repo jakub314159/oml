@@ -5,14 +5,14 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 from oml.classification.pipeline_creation import PipelineCreator
-from oml.classification.preprocessing.preprocessor import ClassificationPreprocessor
+from oml.machine_learning_components.base_preprocessor import BasePreprocessor
 from oml.classification.model_selection.model_selector import ClassificationModelSelector
 from oml import logger
 
 
 @pytest.fixture
 def preprocessor(mocker, mock_train_test_data):
-    preprocessor = mocker.MagicMock(ClassificationPreprocessor)
+    preprocessor = mocker.MagicMock(BasePreprocessor)
     preprocessor.transform.return_value = mocker.MagicMock(ColumnTransformer)
 
     preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test = mock_train_test_data
@@ -58,7 +58,7 @@ def pipeline(mocker):
 
 @pytest.fixture
 def pipeline_creator(mock_dataframe, preprocessor, mocker, selector, model_scores, pipeline):
-    mocker.patch("oml.classification.pipeline_creation.ClassificationPreprocessor", return_value=preprocessor)
+    mocker.patch("oml.machine_learning_components.base_preprocessor.BasePreprocessor", return_value=preprocessor)
     mocker.patch("oml.classification.pipeline_creation.ClassificationModelSelector", return_value=selector)
 
     pipeline_creator = PipelineCreator(dataframe=mock_dataframe, target_column_name="target")

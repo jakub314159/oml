@@ -1,3 +1,5 @@
+from collections import Counter
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -45,3 +47,5 @@ class ClassificationModelSelector(BaseModelSelector):
             "random_forests": {"n_estimators": [90, 100, 110, 120, 130]},
             "svc": {"degree": [2, 3, 4, 5, 6]},
         }
+
+        self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5

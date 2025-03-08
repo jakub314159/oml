@@ -94,7 +94,11 @@ class BasePreprocessor:
         """
         logger.info(msg="starting train_test_split")
 
-        a, b, c, d = train_test_split(self.data, self.target, test_size=test_size, stratify=self.target)
+        try:
+            a, b, c, d = train_test_split(self.data, self.target, test_size=test_size, stratify=self.target)
+
+        except ValueError:
+            a, b, c, d = train_test_split(self.data, self.target, test_size=test_size)
 
         self.X_train = a
         self.X_test = b

@@ -4,6 +4,7 @@ from sklearn.tree import DecisionTreeRegressor
 
 from oml.machine_learning_components.base_model_selector import BaseModelSelector
 
+
 class RegressionModelSelector(BaseModelSelector):
     """
     Class used for selecting the best performing models.
@@ -27,7 +28,6 @@ class RegressionModelSelector(BaseModelSelector):
         super().__init__(X_train, X_test, y_train, y_test)
         self.models_mapping = {
             "linear_regression": LinearRegression,
-            "polynomial_regression": PolynomialFeatures,
             "decision_tree_regression": DecisionTreeRegressor,
         }
 
@@ -35,6 +35,5 @@ class RegressionModelSelector(BaseModelSelector):
 
         self.param_mapping = {
             "linear_regression": {"fit_intercept": [True, False]},
-            "polynomial_regression": {"degree": [2, 3, 5, 7, 8, 10]},
             "decision_tree_regression": {"max_depth": [2, 3, 5, 7, 8, 10, 12]},
         }
