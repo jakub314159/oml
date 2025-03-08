@@ -1,16 +1,16 @@
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from oml import logger
 
 
-class Preprocessor:
+class BasePreprocessor:
     """
-    Class used for preprocessing dataframes.
+    The parent of Preprocessor used for creating classification and regression versions.
 
     Parameters
     ----------
@@ -33,7 +33,6 @@ class Preprocessor:
 
         self.data = None
         self.target = None
-        self.target_mapping = {}
 
         self.X_train = None
         self.X_test = None
@@ -95,7 +94,11 @@ class Preprocessor:
         """
         logger.info(msg="starting train_test_split")
 
-        a, b, c, d = train_test_split(self.data, self.target, test_size=test_size, stratify=self.target)
+        try:
+            a, b, c, d = train_test_split(self.data, self.target, test_size=test_size, stratify=self.target)
+
+        except ValueError:
+            a, b, c, d = train_test_split(self.data, self.target, test_size=test_size)
 
         self.X_train = a
         self.X_test = b
@@ -114,12 +117,14 @@ class Preprocessor:
         -------
         ColumnTransformer: Transformer for the data.
         """
-        cat_features = list(self.data.select_dtypes(include=["object", "category"]).columns)
         num_features = list(self.data.select_dtypes(include=["number"]).columns)
+        cat_features = list(self.data.select_dtypes(include=["object", "category"]).columns)
 
-        cat_transformer = Pipeline([("encoder", OneHotEncoder(handle_unknown="ignore"))])
+        num_transformer = Pipeline([("imputer", SimpleImputer(strategy=self.strategy)), ("scaler", StandardScaler())])
 
-        num_transformer = Pipeline([("imputer", SimpleImputer(strategy=self.strategy))])
+        cat_transformer = Pipeline(
+            [("imputer", SimpleImputer(strategy="most_frequent")), ("encoder", OneHotEncoder(handle_unknown="ignore"))]
+        )
 
         transformer = ColumnTransformer(
             [

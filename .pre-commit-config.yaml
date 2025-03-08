@@ -1,0 +1,9 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: black
+        name: Black Check
+        entry: black oml --check --verbose
+        files: ".*\\.py$"
+        types: [file]
+        language: system

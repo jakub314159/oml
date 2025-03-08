@@ -4,10 +4,11 @@ import pickle
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score
+from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score, root_mean_squared_error
 
-from oml.preprocessing.preprocessor import Preprocessor
-from oml.model_selection.model_selector import ModelSelector
+from oml.machine_learning_components.base_preprocessor import BasePreprocessor
+from oml.classification.model_selection.model_selector import ClassificationModelSelector
+from oml.regression.model_selection.model_selector import RegressionModelSelector
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 from oml import logger
 
@@ -28,9 +29,14 @@ class PipelineCreator:
         Strategy to the imputer.
     """
 
-    def __init__(self, dataframe: pd.DataFrame, target_column_name: str, strategy: str = "median"):
-        self.preprocessor = Preprocessor(dataframe, target_column_name, strategy)
-        self.selector: ModelSelector | None = None
+    def __init__(self, dataframe: pd.DataFrame, target_column_name: str, goal: str, strategy: str = "median"):
+        self.preprocessor = BasePreprocessor(dataframe, target_column_name, strategy)
+        self.selector: ClassificationModelSelector | RegressionModelSelector = None
+        self.goal = goal
+
+        if self.goal not in ["regression", "classification"]:
+            logger.warning("goal is incorrect, You have to choose between 'regression' and 'classification'")
+            self.goal = input("please select a goal\n")
 
         self.transformer: ColumnTransformer | None = None
 
@@ -68,9 +74,24 @@ class PipelineCreator:
         -------
         None
         """
-        self.selector = ModelSelector(
-            self.preprocessor.X_train, self.preprocessor.X_test, self.preprocessor.y_train, self.preprocessor.y_test
-        )
+        match self.goal:
+            case "classification":
+                self.selector = ClassificationModelSelector(
+                    self.preprocessor.X_train,
+                    self.preprocessor.X_test,
+                    self.preprocessor.y_train,
+                    self.preprocessor.y_test,
+                )
+            case "regression":
+                self.selector = RegressionModelSelector(
+                    self.preprocessor.X_train,
+                    self.preprocessor.X_test,
+                    self.preprocessor.y_train,
+                    self.preprocessor.y_test,
+                )
+            case _:
+                raise ValueError("Wrong goal given.")
+
         logger.info("ModelSelector is prepared.")
 
     def add_models_to_selector(
@@ -156,14 +177,15 @@ class PipelineCreator:
 
         return self.best_models
 
-    def fit_best_pipelines(self, test_metric: str = "recall", n_best: int = 2) -> None:
+    def fit_best_pipelines(self, test_metric: str = None, n_best: int = 2) -> None:
         """
         Gets best performing models on the selected metric.
 
         Parameters
         ----------
         test_metric: str
-            Best soothing metric for your classification problem
+            Best soothing metric for your classification problem.
+            Not needed when dealing with regression problem.
         n_best: int
             Number of best performing models you want to get
 
@@ -173,17 +195,27 @@ class PipelineCreator:
         """
         logger.info("Starting pipeline fitting.")
 
-        metric_function_mapping = {
-            "accuracy": accuracy_score,
-            "recall": recall_score,
-            "f1": f1_score,
-            "precision": precision_score,
-        }
+        match self.goal:
+            case "classification":
+                metric_function_mapping = {
+                    "accuracy": accuracy_score,
+                    "recall": recall_score,
+                    "f1": f1_score,
+                    "precision": precision_score,
+                }
 
-        if test_metric not in metric_function_mapping:
-            raise ValueError("Invalid test metric. Choose from: 'accuracy', 'recall', 'f1', 'precision'.")
+                if test_metric not in metric_function_mapping:
+                    raise ValueError(
+                        "Invalid test metric. Choose 'accuracy', 'recall', 'f1', 'precision' for classification."
+                    )
 
-        metric_function = metric_function_mapping[test_metric]
+                metric_function = metric_function_mapping[test_metric]
+
+            case "regression":
+                metric_function = root_mean_squared_error
+
+            case _:
+                raise ValueError("incorrect goal.")
 
         for model_dict in self.best_models:
             params = model_dict["params"]
@@ -197,10 +229,21 @@ class PipelineCreator:
             if test_metric == "accuracy":
                 score = metric_function(self.selector.y_test, y_pred)
             else:
-                score = metric_function(self.selector.y_test, y_pred, average="micro")
+                match self.goal:
+                    case "classification":
+                        score = metric_function(self.selector.y_test, y_pred, average="micro")
+                    case "regression":
+                        score = metric_function(self.selector.y_test, y_pred)
+                    case _:
+                        raise ValueError("incorrect goal.")
 
             self.pipeline_info.append({"pipeline": pipeline, "score": score})
-        self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best)
+
+        match self.goal:
+            case "classification":
+                self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best)
+            case "regression":
+                self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best, True)
 
         logger.info("pipelines fitted.")
 

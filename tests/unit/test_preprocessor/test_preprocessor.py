@@ -3,12 +3,12 @@ import pandas as pd
 from sklearn.compose import ColumnTransformer
 
 from oml import logger
-from oml.preprocessing.preprocessor import Preprocessor
+from oml.machine_learning_components.base_preprocessor import BasePreprocessor
 
 
 @pytest.fixture
 def preprocessor(mock_dataframe):
-    return Preprocessor(dataframe=mock_dataframe, target_column_name="target")
+    return BasePreprocessor(dataframe=mock_dataframe, target_column_name="target")
 
 
 @pytest.fixture

@@ -1,21 +1,15 @@
 from itertools import product
-from collections import Counter
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
 
-class ModelSelector:
+class BaseModelSelector:
     """
-    Class used for selecting the best performing models.
+    The parent of ModelSelector used for creating classification and regression versions.
 
-    Parameters
+    Attributes
     ----------
     X_train: np.array
         X_train from train_test_split
@@ -38,25 +32,12 @@ class ModelSelector:
 
         self.model_scores = []
 
-        self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5
+        self.n_splits = 5
 
-        self.models_mapping = {
-            "logistic_regression": LogisticRegression,
-            "KNN": KNeighborsClassifier,
-            "decision_tree_classification": DecisionTreeClassifier,
-            "random_forests": RandomForestClassifier,
-            "svc": SVC,
-        }
+        self.models_mapping = {}
+        self.model_list = []
 
-        self.model_list = list(self.models_mapping.keys())
-
-        self.param_mapping = {
-            "logistic_regression": {"max_iter": [50, 80, 100, 120, 150]},
-            "KNN": {"n_neighbors": [4, 5, 8, 10, 12, 13, 16, 23, 25]},
-            "decision_tree_classification": {"max_depth": [2, 3, 5, 7, 9]},
-            "random_forests": {"n_estimators": [90, 100, 110, 120, 130]},
-            "svc": {"degree": [2, 3, 4, 5, 6]},
-        }
+        self.param_mapping = {}
 
     def get_all_model_scores(self, model_name: str) -> None:
         """
@@ -90,7 +71,7 @@ class ModelSelector:
                 }
             )
 
-    def find_best_performing_models(self, n_best: int = 3) -> list[dict]:
+    def find_best_performing_models(self, n_best: int = 3) -> list:
         """
         Sorts all the model scores and return n_best.
 
@@ -101,8 +82,7 @@ class ModelSelector:
 
         Returns
         -------
-        list[dict]
-            The list of the best models and their info.
+        dict: The scores
         """
         for model_name in self.model_list:
             self.get_all_model_scores(model_name)

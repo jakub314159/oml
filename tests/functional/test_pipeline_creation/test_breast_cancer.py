@@ -2,7 +2,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.pipeline import Pipeline
 import pandas as pd
 
-from oml.pipeline_creation import PipelineCreator
+from oml.classification.pipeline_creation import PipelineCreator
 
 
 def test_model_selector_on_breast_cancer():
@@ -10,10 +10,7 @@ def test_model_selector_on_breast_cancer():
     data = all_data["data"]
     target = all_data["target"]
 
-    pipeline_creator = PipelineCreator(
-        dataframe=pd.DataFrame,
-        target_column_name="species",
-    )
+    pipeline_creator = PipelineCreator(dataframe=pd.DataFrame, target_column_name="species", goal="classification")
 
     pipeline_creator.preprocessor.data = data
     pipeline_creator.preprocessor.target = target

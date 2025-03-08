@@ -1,22 +1,19 @@
-import numpy as np
-import pandas as pd
 import pytest
-from oml.model_selection.model_selector import ModelSelector
+from oml.classification.model_selection.model_selector import ClassificationModelSelector
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
-
 
 
 @pytest.fixture
 def model_selector(mock_train_test_data, mocker):
     X_train, X_test, y_train, y_test = mock_train_test_data
 
-    mocker.patch("oml.model_selection.model_selector.cross_val_score", return_value=[0.8, 0.85, 0.9])
+    mocker.patch("oml.machine_learning_components.base_model_selector.cross_val_score", return_value=[0.8, 0.85, 0.9])
 
-    return ModelSelector(X_train, X_test, y_train, y_test)
+    return ClassificationModelSelector(X_train, X_test, y_train, y_test)
 
 
 class TestModelSelector:
-    def test_get_all_model_scores(self, model_selector, mocker):
+    def test_get_all_model_scores(self, model_selector):
         model_selector.get_all_model_scores("logistic_regression")
 
         assert len(model_selector.model_scores) > 0
