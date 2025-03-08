@@ -77,11 +77,17 @@ class PipelineCreator:
         match self.goal:
             case "classification":
                 self.selector = ClassificationModelSelector(
-                    self.preprocessor.X_train, self.preprocessor.X_test, self.preprocessor.y_train, self.preprocessor.y_test
+                    self.preprocessor.X_train,
+                    self.preprocessor.X_test,
+                    self.preprocessor.y_train,
+                    self.preprocessor.y_test,
                 )
             case "regression":
                 self.selector = RegressionModelSelector(
-                    self.preprocessor.X_train, self.preprocessor.X_test, self.preprocessor.y_train, self.preprocessor.y_test
+                    self.preprocessor.X_train,
+                    self.preprocessor.X_test,
+                    self.preprocessor.y_train,
+                    self.preprocessor.y_test,
                 )
             case _:
                 raise ValueError("Wrong goal given.")
@@ -199,8 +205,10 @@ class PipelineCreator:
                 }
 
                 if test_metric not in metric_function_mapping:
-                    raise ValueError("Invalid test metric. Choose 'accuracy', 'recall', 'f1', 'precision' for classification.")
-                
+                    raise ValueError(
+                        "Invalid test metric. Choose 'accuracy', 'recall', 'f1', 'precision' for classification."
+                    )
+
                 metric_function = metric_function_mapping[test_metric]
 
             case "regression":

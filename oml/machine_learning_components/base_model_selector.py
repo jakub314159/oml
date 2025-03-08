@@ -1,4 +1,3 @@
-from collections import Counter
 from itertools import product
 
 from sklearn.model_selection import cross_val_score

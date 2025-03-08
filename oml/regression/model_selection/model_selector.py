@@ -1,5 +1,4 @@
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.tree import DecisionTreeRegressor
 
 from oml.machine_learning_components.base_model_selector import BaseModelSelector

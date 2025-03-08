@@ -12,7 +12,9 @@ def test_model_selector_on_ghosts():
     data = pd.read_csv(_here.parent / "test_data" / "ghosts_train.csv")
     data = data.drop(columns=["id"])
 
-    pipeline_creator = PipelineCreator(dataframe=data, target_column_name="type", strategy="mean", goal = "classification")
+    pipeline_creator = PipelineCreator(
+        dataframe=data, target_column_name="type", strategy="mean", goal="classification"
+    )
     pipeline_creator.dataframe_preprocessing(train_test_split_size=0.25)
     pipeline_creator.prepare_model_selector()
     pipeline_creator.find_best_models()

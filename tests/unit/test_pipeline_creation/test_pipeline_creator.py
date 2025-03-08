@@ -61,7 +61,7 @@ def pipeline_creator(mock_dataframe, preprocessor, mocker, selector, model_score
     mocker.patch("oml.machine_learning_components.base_preprocessor.BasePreprocessor", return_value=preprocessor)
     mocker.patch("oml.classification.pipeline_creation.ClassificationModelSelector", return_value=selector)
 
-    pipeline_creator = PipelineCreator(dataframe=mock_dataframe, target_column_name="target", goal= "classification")
+    pipeline_creator = PipelineCreator(dataframe=mock_dataframe, target_column_name="target", goal="classification")
     pipeline_creator.pipeline_info = [{"pipeline": pipeline}]
 
     return pipeline_creator
