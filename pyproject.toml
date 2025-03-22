@@ -30,6 +30,7 @@ dev = [
     "oml[test]",
     "oml[docs]",
     "oml[code-check]",
+    "pre-commit",
 ]
 
 [tool.setuptools.packages.find]
