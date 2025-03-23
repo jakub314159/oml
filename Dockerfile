@@ -1,5 +1,5 @@
 # Na podstawie obrazu z Docker Hub z instalacja pythona jak nizej
-FROM python:3.12
+FROM python:3.13
 
 # Ustawmy katalog roboczy w kontenerze
 WORKDIR /app

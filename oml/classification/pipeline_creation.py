@@ -237,6 +237,7 @@ class PipelineCreator:
                     case _:
                         raise ValueError("incorrect goal.")
 
+            # pylint: disable=possibly-used-before-assignment
             self.pipeline_info.append({"pipeline": pipeline, "score": score})
 
         match self.goal:

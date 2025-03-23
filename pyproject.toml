@@ -20,9 +20,9 @@ dependencies = [
 
 [project.optional-dependencies]
 
-test = ["pytest", "pytest-cov", "pytest-mock"]
+test = ["pytest", "pytest-cov", "pytest-mock", "pytest-html"]
 
-code-check = ["black"]
+code-check = ["black", "pylint"]
 
 docs = ["mkdocs", "mkdocs-material", "mkdocstrings[python]"]
 
