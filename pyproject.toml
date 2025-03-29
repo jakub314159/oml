@@ -16,6 +16,7 @@ dependencies = [
     "pandas",
     "numpy",
     "scikit-learn",
+    "click",
 ]
 
 [project.optional-dependencies]

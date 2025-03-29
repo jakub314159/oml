@@ -16,7 +16,7 @@ def test_model_selector_on_breast_cancer():
     preprocessor.transform()
 
     selector = ClassificationModelSelector(
-        preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test
+        preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test, "recall"
     )
     best_models = selector.find_best_performing_models(n_best=3)
 

@@ -18,7 +18,7 @@ def test_model_selector_on_iris_df():
     preprocessor.train_test_split()
 
     selector = ClassificationModelSelector(
-        preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test
+        preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test, "recall"
     )
     best_models = selector.find_best_performing_models(n_best=3)
 

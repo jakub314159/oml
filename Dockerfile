@@ -15,4 +15,4 @@ ENV PATH="/app/venv/bin:$PATH"
 RUN pip install .[dev]
 
 # Uruchamiamy testy
-CMD ["pytest", "tests/unit", "--cov=oml", "--cov-report=term-missing"]
+CMD ["python", "click_cli.py"]

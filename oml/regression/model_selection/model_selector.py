@@ -24,8 +24,8 @@ class RegressionModelSelector(BaseModelSelector):
         y_test from train_test_split
     """
 
-    def __init__(self, X_train, X_test, y_train, y_test):
-        super().__init__(X_train, X_test, y_train, y_test)
+    def __init__(self, X_train, X_test, y_train, y_test, score_metric):
+        super().__init__(X_train, X_test, y_train, y_test, score_metric)
         self.models_mapping = {
             "linear_regression": LinearRegression,
             "decision_tree_regression": DecisionTreeRegressor,

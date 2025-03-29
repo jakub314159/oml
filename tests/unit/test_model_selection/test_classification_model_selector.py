@@ -9,7 +9,7 @@ def model_selector(mock_train_test_data, mocker):
 
     mocker.patch("oml.machine_learning_components.base_model_selector.cross_val_score", return_value=[0.8, 0.85, 0.9])
 
-    return ClassificationModelSelector(X_train, X_test, y_train, y_test)
+    return ClassificationModelSelector(X_train, X_test, y_train, y_test, "recall")
 
 
 class TestModelSelector:

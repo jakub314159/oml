@@ -24,11 +24,13 @@ class BaseModelSelector:
         y_test from train_test_split
     """
 
-    def __init__(self, X_train, X_test, y_train, y_test):
+    def __init__(self, X_train, X_test, y_train, y_test, score_metric):
         self.X_train = X_train
         self.X_test = X_test
         self.y_train = y_train.to_numpy().flatten()
         self.y_test = y_test.to_numpy().flatten()
+
+        self.score_metric = score_metric
 
         self.model_scores = []
 
@@ -59,7 +61,7 @@ class BaseModelSelector:
         for combination in combinations:
             model = class_name(**combination)
 
-            scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits)
+            scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits, scoring=self.score_metric)
             score = sum(scores) / len(scores)
 
             self.model_scores.append(

@@ -4,7 +4,7 @@ import pytest
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-from oml.classification.pipeline_creation import PipelineCreator
+from oml.pipeline_creation import PipelineCreator
 from oml.machine_learning_components.base_preprocessor import BasePreprocessor
 from oml.classification.model_selection.model_selector import ClassificationModelSelector
 from oml import logger
@@ -59,9 +59,11 @@ def pipeline(mocker):
 @pytest.fixture
 def pipeline_creator(mock_dataframe, preprocessor, mocker, selector, model_scores, pipeline):
     mocker.patch("oml.machine_learning_components.base_preprocessor.BasePreprocessor", return_value=preprocessor)
-    mocker.patch("oml.classification.pipeline_creation.ClassificationModelSelector", return_value=selector)
+    mocker.patch("oml.pipeline_creation.ClassificationModelSelector", return_value=selector)
 
-    pipeline_creator = PipelineCreator(dataframe=mock_dataframe, target_column_name="target", goal="classification")
+    pipeline_creator = PipelineCreator(
+        dataframe=mock_dataframe, target_column_name="target", learning_type="classification", score_metric="recall"
+    )
     pipeline_creator.pipeline_info = [{"pipeline": pipeline}]
 
     return pipeline_creator
@@ -124,8 +126,8 @@ class TestPipelineCreator:
 
     @pytest.mark.parametrize("metric", ["accuracy", "recall"])
     def test_fit_best_pipelines(self, pipeline_creator, mocker, model_scores, metric):
-        mocker.patch("oml.classification.pipeline_creation.recall_score", return_value=1)
-        mocker.patch("oml.classification.pipeline_creation.accuracy_score", return_value=1)
+        mocker.patch("oml.pipeline_creation.recall_score", return_value=1)
+        mocker.patch("oml.pipeline_creation.accuracy_score", return_value=1)
         mocker.patch.object(logger, "info")
 
         pipeline_creator.pipeline_info = []
@@ -133,16 +135,8 @@ class TestPipelineCreator:
         pipeline_creator.prepare_model_selector()
         pipeline_creator.best_models = model_scores
 
-        pipeline_creator.fit_best_pipelines(test_metric=metric)
+        pipeline_creator.fit_best_pipelines()
         assert len(pipeline_creator.pipeline_info) > 0
-
-    def test_fit_best_pipelines_value_error(self, pipeline_creator, mocker):
-        mocker.patch.object(logger, "info")
-
-        with pytest.raises(ValueError) as e:
-            pipeline_creator.fit_best_pipelines(test_metric="error")
-
-        assert str(e.value) == "Invalid test metric. Choose 'accuracy', 'recall', 'f1', 'precision' for classification."
 
     def test_get_pipeline(self, pipeline_creator):
         returned_pipeline = pipeline_creator.get_pipeline(0)
@@ -151,8 +145,8 @@ class TestPipelineCreator:
 
     @pytest.mark.parametrize("form", [{"index": 0}, {"model_pipeline": "pipeline"}])
     def test_save_pipeline_to_pickle_file(self, pipeline_creator, mocker, caplog, form):
-        mocker.patch("oml.classification.pipeline_creation.open")
-        mocker.patch("oml.classification.pipeline_creation.pickle.dump")
+        mocker.patch("oml.pipeline_creation.open")
+        mocker.patch("oml.pipeline_creation.pickle.dump")
 
         path = "filepath"
 
@@ -168,8 +162,8 @@ class TestPipelineCreator:
         assert str(e.value) == "you need to give either index or pipeline"
 
     def test_from_pickle_to_pipeline(self, pipeline_creator, mocker, pipeline):
-        mocker.patch("oml.classification.pipeline_creation.open")
-        mocker.patch("oml.classification.pipeline_creation.pickle.load", return_value=pipeline)
+        mocker.patch("oml.pipeline_creation.open")
+        mocker.patch("oml.pipeline_creation.pickle.load", return_value=pipeline)
 
         path = mocker.MagicMock(Path)
 
