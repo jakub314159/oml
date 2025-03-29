@@ -1,6 +1,7 @@
 from collections import Counter
 
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -49,3 +50,6 @@ class ClassificationModelSelector(BaseModelSelector):
         }
 
         self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5
+
+    def _get_scorer(self):
+        make_scorer(self.score_function, "micro")

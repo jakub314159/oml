@@ -42,6 +42,9 @@ class BaseModelSelector:
 
         self.param_mapping = {}
 
+    def _get_scorer(self):
+        return make_scorer(self.score_function)
+
     def get_all_model_scores(self, model_name: str) -> None:
         """
         Gets scores from all parameters on the train test values.
@@ -62,7 +65,7 @@ class BaseModelSelector:
         for combination in combinations:
             model = class_name(**combination)
 
-            scorer = make_scorer(self.score_function)
+            scorer = self._get_scorer()
 
             scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits, scoring=scorer)
             score = sum(scores) / len(scores)
