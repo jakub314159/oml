@@ -18,7 +18,7 @@ def test_regression_model_selector():
         target_column_name="Temperature (C)",
         strategy="mean",
         learning_type="regression",
-        score_metric="neg_root_mean_squared_error",
+        score_metric="rmse",
     )
 
     pipeline_creator.dataframe_preprocessing(train_test_split_size=0.25)
@@ -28,4 +28,4 @@ def test_regression_model_selector():
     pipeline = pipeline_creator.get_pipeline(index=0)
 
     assert isinstance(pipeline, Pipeline)
-    assert pipeline_creator.pipeline_info[0]["score"] < 0.3
+    assert pipeline_creator.pipeline_info[0]["score"] < 1

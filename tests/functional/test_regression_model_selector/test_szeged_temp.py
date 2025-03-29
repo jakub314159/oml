@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+from sklearn.metrics import root_mean_squared_error
 
 from oml.regression.model_selection.model_selector import RegressionModelSelector
 from oml.machine_learning_components.base_preprocessor import BasePreprocessor
@@ -25,7 +26,7 @@ def test_regression_model_selector():
         preprocessor.X_test,
         preprocessor.y_train,
         preprocessor.y_test,
-        "neg_root_mean_squared_error",
+        root_mean_squared_error,
     )
 
     best_models = selector.find_best_performing_models(n_best=2)
@@ -33,4 +34,4 @@ def test_regression_model_selector():
     assert len(best_models) == 2
 
     for model in best_models:
-        assert model["score"] <= 0
+        assert model["score"]

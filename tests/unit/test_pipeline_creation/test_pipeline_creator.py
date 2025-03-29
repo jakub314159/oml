@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from sklearn.compose import ColumnTransformer
+from sklearn.metrics import recall_score, accuracy_score
 from sklearn.pipeline import Pipeline
 
 from oml.pipeline_creation import PipelineCreator
@@ -126,9 +127,9 @@ class TestPipelineCreator:
 
     @pytest.mark.parametrize("metric", ["accuracy", "recall"])
     def test_fit_best_pipelines(self, pipeline_creator, mocker, model_scores, metric):
-        mocker.patch("oml.pipeline_creation.recall_score", return_value=1)
-        mocker.patch("oml.pipeline_creation.accuracy_score", return_value=1)
         mocker.patch.object(logger, "info")
+        accuracy_score_mock = mocker.MagicMock(return_value=1)
+        mocker.patch("oml.pipeline_creation.accuracy_score", return_value=accuracy_score_mock)
 
         pipeline_creator.pipeline_info = []
 

@@ -28,8 +28,8 @@ class ClassificationModelSelector(BaseModelSelector):
         y_test from train_test_split
     """
 
-    def __init__(self, X_train, X_test, y_train, y_test, score_metric):
-        super().__init__(X_train, X_test, y_train, y_test, score_metric)
+    def __init__(self, X_train, X_test, y_train, y_test, score_function):
+        super().__init__(X_train, X_test, y_train, y_test, score_function)
         self.models_mapping = {
             "logistic_regression": LogisticRegression,
             "KNN": KNeighborsClassifier,

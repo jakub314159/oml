@@ -1,6 +1,7 @@
 from itertools import product
 
 from sklearn.model_selection import cross_val_score
+from sklearn.metrics import make_scorer
 
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
@@ -24,13 +25,13 @@ class BaseModelSelector:
         y_test from train_test_split
     """
 
-    def __init__(self, X_train, X_test, y_train, y_test, score_metric):
+    def __init__(self, X_train, X_test, y_train, y_test, score_function):
         self.X_train = X_train
         self.X_test = X_test
         self.y_train = y_train.to_numpy().flatten()
         self.y_test = y_test.to_numpy().flatten()
 
-        self.score_metric = score_metric
+        self.score_function = score_function
 
         self.model_scores = []
 
@@ -61,7 +62,9 @@ class BaseModelSelector:
         for combination in combinations:
             model = class_name(**combination)
 
-            scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits, scoring=self.score_metric)
+            scorer = make_scorer(self.score_function)
+
+            scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits, scoring=scorer)
             score = sum(scores) / len(scores)
 
             self.model_scores.append(

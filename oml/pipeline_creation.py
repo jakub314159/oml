@@ -51,6 +51,14 @@ class PipelineCreator:
         self.best_models = {}
         self.pipeline_info = []
 
+        self.metric_function_mapping = {
+            "accuracy": accuracy_score,
+            "recall": recall_score,
+            "f1": f1_score,
+            "precision": precision_score,
+            "rmse": root_mean_squared_error,
+        }
+
     def dataframe_preprocessing(self, train_test_split_size: float = 0.2) -> None:
         """
         Does preprocessing on the dataframe.
@@ -89,7 +97,7 @@ class PipelineCreator:
                     self.preprocessor.X_test,
                     self.preprocessor.y_train,
                     self.preprocessor.y_test,
-                    self.score_metric,
+                    self.metric_function_mapping[self.score_metric],
                 )
             case "regression":
                 self.selector = RegressionModelSelector(
@@ -97,7 +105,7 @@ class PipelineCreator:
                     self.preprocessor.X_test,
                     self.preprocessor.y_train,
                     self.preprocessor.y_test,
-                    self.score_metric,
+                    self.metric_function_mapping[self.score_metric],
                 )
             case _:
                 raise ValueError("Wrong goal given.")
@@ -202,15 +210,7 @@ class PipelineCreator:
         """
         logger.info("Starting pipeline fitting.")
 
-        metric_function_mapping = {
-            "accuracy": accuracy_score,
-            "recall": recall_score,
-            "f1": f1_score,
-            "precision": precision_score,
-            "neg_root_mean_squared_error": root_mean_squared_error,
-        }
-
-        metric_function = metric_function_mapping[self.score_metric]
+        metric_function = self.metric_function_mapping[self.score_metric]
 
         for model_dict in self.best_models:
             params = model_dict["params"]
