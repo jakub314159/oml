@@ -1,5 +1,6 @@
 from sklearn.datasets import load_iris
 import pandas as pd
+from sklearn.metrics import root_mean_squared_error
 
 from oml.regression.model_selection.model_selector import RegressionModelSelector
 from oml.machine_learning_components.base_preprocessor import BasePreprocessor
@@ -20,7 +21,7 @@ def test_model_selector_on_iris_df():
     preprocessor.transform()
 
     selector = RegressionModelSelector(
-        preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test, "rmse"
+        preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test, root_mean_squared_error
     )
     best_models = selector.find_best_performing_models(n_best=2)
 

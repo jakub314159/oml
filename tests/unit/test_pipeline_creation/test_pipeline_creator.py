@@ -128,8 +128,11 @@ class TestPipelineCreator:
     @pytest.mark.parametrize("metric", ["accuracy", "recall"])
     def test_fit_best_pipelines(self, pipeline_creator, mocker, model_scores, metric):
         mocker.patch.object(logger, "info")
+
         accuracy_score_mock = mocker.MagicMock(return_value=1)
-        mocker.patch("oml.pipeline_creation.accuracy_score", return_value=accuracy_score_mock)
+        recall_score_mock = mocker.MagicMock(return_value=1)
+
+        pipeline_creator.metric_function_mapping = {"accuracy": accuracy_score_mock, "recall": recall_score_mock}
 
         pipeline_creator.pipeline_info = []
 

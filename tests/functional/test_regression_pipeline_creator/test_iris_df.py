@@ -21,7 +21,7 @@ def test_regression_model_selector():
         target_column_name="sepal width (cm)",
         strategy="mean",
         learning_type="regression",
-        score_metric="neg_root_mean_squared_error",
+        score_metric="rmse",
     )
 
     pipeline_creator.dataframe_preprocessing(train_test_split_size=0.25)
