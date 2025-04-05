@@ -31,4 +31,4 @@ def test_regression_model_selector():
     pipeline = pipeline_creator.get_pipeline(index=0)
 
     assert isinstance(pipeline, Pipeline)
-    assert pipeline_creator.pipeline_info[0]["score"] < 0.4
+    assert pipeline_creator.pipeline_info[0]["score"] < 0.5

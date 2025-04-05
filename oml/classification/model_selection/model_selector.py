@@ -52,4 +52,6 @@ class ClassificationModelSelector(BaseModelSelector):
         self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5
 
     def _get_scorer(self):
-        make_scorer(self.score_function, "micro")
+        if len(set(self.y_test)) > 2:
+            return make_scorer(self.score_function, average="micro")
+        return super()._get_scorer()

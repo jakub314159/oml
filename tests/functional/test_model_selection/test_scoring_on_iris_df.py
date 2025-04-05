@@ -17,6 +17,7 @@ def test_model_selector_on_iris_df():
     preprocessor.remove_invalid_data()
     preprocessor.data_target_split()
     preprocessor.train_test_split()
+    preprocessor.transform()
 
     selector = ClassificationModelSelector(
         preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test, recall_score
