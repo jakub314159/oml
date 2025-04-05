@@ -21,9 +21,11 @@ def run_experiment(file_name, target_column_name, learning_type, test_metric):
     pipeline_creator.prepare_model_selector()
     pipeline_creator.find_best_models(3)
     pipeline_creator.fit_best_pipelines(3)
-    pipeline_creator.save_pipeline_to_pickle_file(
-        file_path=Path(__file__).parent / "data" / f"{file_name}" / "pipelines.pkl", index=0
-    )
+
+    folder_path = Path(__file__).parent / "data" / f"{file_name}"
+    folder_path.mkdir(exist_ok=True)
+
+    pipeline_creator.save_pipeline_to_pickle_file(file_path=folder_path / "pipelines.pkl", index=0)
 
 
 if __name__ == "__main__":
