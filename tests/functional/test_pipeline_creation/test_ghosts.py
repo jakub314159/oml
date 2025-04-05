@@ -3,7 +3,7 @@ from pathlib import Path
 from sklearn.pipeline import Pipeline
 import pandas as pd
 
-from oml.classification.pipeline_creation import PipelineCreator
+from oml.pipeline_creation import PipelineCreator
 
 _here = Path(__file__).parent
 
@@ -13,12 +13,16 @@ def test_model_selector_on_ghosts():
     data = data.drop(columns=["id"])
 
     pipeline_creator = PipelineCreator(
-        dataframe=data, target_column_name="type", strategy="mean", goal="classification"
+        dataframe=data,
+        target_column_name="type",
+        strategy="mean",
+        learning_type="classification",
+        score_metric="precision",
     )
     pipeline_creator.dataframe_preprocessing(train_test_split_size=0.25)
     pipeline_creator.prepare_model_selector()
     pipeline_creator.find_best_models()
-    pipeline_creator.fit_best_pipelines(test_metric="precision")
+    pipeline_creator.fit_best_pipelines()
     pipeline = pipeline_creator.get_pipeline(index=0)
 
     assert isinstance(pipeline, Pipeline)

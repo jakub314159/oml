@@ -189,7 +189,7 @@ print(best_models)
 import pandas as pd
 from sklearn.datasets import load_iris
 
-from oml.classification.pipeline_creation import PipelineCreator
+from oml.pipeline_creation import PipelineCreator
 
 iris = load_iris()
 

@@ -1,6 +1,7 @@
 from collections import Counter
 
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -28,8 +29,8 @@ class ClassificationModelSelector(BaseModelSelector):
         y_test from train_test_split
     """
 
-    def __init__(self, X_train, X_test, y_train, y_test):
-        super().__init__(X_train, X_test, y_train, y_test)
+    def __init__(self, X_train, X_test, y_train, y_test, score_function):
+        super().__init__(X_train, X_test, y_train, y_test, score_function)
         self.models_mapping = {
             "logistic_regression": LogisticRegression,
             "KNN": KNeighborsClassifier,
@@ -49,3 +50,8 @@ class ClassificationModelSelector(BaseModelSelector):
         }
 
         self.n_splits = min(Counter(self.y_train).values()) if min(Counter(self.y_train).values()) < 5 else 5
+
+    def _get_scorer(self):
+        if len(set(self.y_test)) > 2:
+            return make_scorer(self.score_function, average="micro")
+        return super()._get_scorer()

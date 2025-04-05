@@ -16,13 +16,14 @@ dependencies = [
     "pandas",
     "numpy",
     "scikit-learn",
+    "click",
 ]
 
 [project.optional-dependencies]
 
-test = ["pytest", "pytest-cov", "pytest-mock"]
+test = ["pytest", "pytest-cov", "pytest-mock", "pytest-html"]
 
-code-check = ["black"]
+code-check = ["black", "pylint"]
 
 docs = ["mkdocs", "mkdocs-material", "mkdocstrings[python]"]
 
@@ -44,6 +45,7 @@ line-length = 120
 [tool.pylint]
 max-line-length = 120
 max-args = 8
+max-positional-arguments = 6
 disable = [
     "C0103", #snake case naming style
     "missing-module-docstring",

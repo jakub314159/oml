@@ -1,6 +1,8 @@
 from itertools import product
 
 from sklearn.model_selection import cross_val_score
+from sklearn.metrics import make_scorer
+from sklearn.preprocessing import LabelEncoder
 
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
@@ -24,11 +26,15 @@ class BaseModelSelector:
         y_test from train_test_split
     """
 
-    def __init__(self, X_train, X_test, y_train, y_test):
+    def __init__(self, X_train, X_test, y_train, y_test, score_function):
         self.X_train = X_train
         self.X_test = X_test
         self.y_train = y_train.to_numpy().flatten()
         self.y_test = y_test.to_numpy().flatten()
+
+        self._y_train_encoded = LabelEncoder().fit_transform(self.y_train)
+
+        self.score_function = score_function
 
         self.model_scores = []
 
@@ -38,6 +44,9 @@ class BaseModelSelector:
         self.model_list = []
 
         self.param_mapping = {}
+
+    def _get_scorer(self):
+        return make_scorer(self.score_function)
 
     def get_all_model_scores(self, model_name: str) -> None:
         """
@@ -59,7 +68,9 @@ class BaseModelSelector:
         for combination in combinations:
             model = class_name(**combination)
 
-            scores = cross_val_score(model, self.X_train, self.y_train, cv=self.n_splits)
+            scorer = self._get_scorer()
+
+            scores = cross_val_score(model, self.X_train, self._y_train_encoded, cv=self.n_splits, scoring=scorer)
             score = sum(scores) / len(scores)
 
             self.model_scores.append(

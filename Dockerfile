@@ -1,5 +1,5 @@
 # Na podstawie obrazu z Docker Hub z instalacja pythona jak nizej
-FROM python:3.12
+FROM python:3.13
 
 # Ustawmy katalog roboczy w kontenerze
 WORKDIR /app
@@ -15,4 +15,4 @@ ENV PATH="/app/venv/bin:$PATH"
 RUN pip install .[dev]
 
 # Uruchamiamy testy
-CMD ["pytest", "tests/unit", "--cov=oml", "--cov-report=term-missing"]
+CMD ["python", "click_cli.py"]

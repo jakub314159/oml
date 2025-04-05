@@ -2,7 +2,7 @@ from sklearn.datasets import load_iris
 from sklearn.pipeline import Pipeline
 import pandas as pd
 
-from oml.classification.pipeline_creation import PipelineCreator
+from oml.pipeline_creation import PipelineCreator
 
 
 def test_pipeline_creator_on_iris_df(tmp_path):
@@ -15,15 +15,13 @@ def test_pipeline_creator_on_iris_df(tmp_path):
     file_path = tmp_path / "pipeline_test.pkl"
 
     pipeline_creator = PipelineCreator(
-        dataframe=iris_df,
-        target_column_name="species",
-        goal="classification",
+        dataframe=iris_df, target_column_name="species", learning_type="classification", score_metric="precision"
     )
 
     pipeline_creator.dataframe_preprocessing()
     pipeline_creator.prepare_model_selector()
     pipeline_creator.find_best_models()
-    pipeline_creator.fit_best_pipelines(test_metric="precision")
+    pipeline_creator.fit_best_pipelines()
     pipeline = pipeline_creator.get_pipeline(index=0)
     pipeline_creator.save_pipeline_to_pickle_file(file_path, model_pipeline=pipeline)
 

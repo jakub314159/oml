@@ -1,4 +1,6 @@
 import pytest
+from sklearn.metrics import recall_score
+
 from oml.classification.model_selection.model_selector import ClassificationModelSelector
 from oml.utils.utils_finding_best_models import utils_find_best_performing_models
 
@@ -8,8 +10,9 @@ def model_selector(mock_train_test_data, mocker):
     X_train, X_test, y_train, y_test = mock_train_test_data
 
     mocker.patch("oml.machine_learning_components.base_model_selector.cross_val_score", return_value=[0.8, 0.85, 0.9])
+    recall = mocker.MagicMock(recall_score)
 
-    return ClassificationModelSelector(X_train, X_test, y_train, y_test)
+    return ClassificationModelSelector(X_train, X_test, y_train, y_test, recall)
 
 
 class TestModelSelector:

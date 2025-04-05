@@ -3,7 +3,7 @@ from oml.regression.model_selection.model_selector import RegressionModelSelecto
 
 def test_regression_model_selector(mock_train_test_data):
     X_train, X_test, y_train, y_test = mock_train_test_data
-    model_selector = RegressionModelSelector(X_train, X_test, y_train, y_test)
+    model_selector = RegressionModelSelector(X_train, X_test, y_train, y_test, "recall")
 
     assert (
         "linear_regression" in model_selector.models_mapping.keys()

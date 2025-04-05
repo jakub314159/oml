@@ -1,5 +1,6 @@
 from sklearn.datasets import load_iris
 import pandas as pd
+from sklearn.metrics import recall_score
 
 from oml.classification.model_selection.model_selector import ClassificationModelSelector
 from oml.machine_learning_components.base_preprocessor import BasePreprocessor
@@ -16,9 +17,10 @@ def test_model_selector_on_iris_df():
     preprocessor.remove_invalid_data()
     preprocessor.data_target_split()
     preprocessor.train_test_split()
+    preprocessor.transform()
 
     selector = ClassificationModelSelector(
-        preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test
+        preprocessor.X_train, preprocessor.X_test, preprocessor.y_train, preprocessor.y_test, recall_score
     )
     best_models = selector.find_best_performing_models(n_best=3)
 
