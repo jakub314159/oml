@@ -17,6 +17,8 @@ def run_experiment():
         learning_type = req.get("learning_type")
         test_metric = req.get("test_metric")
 
+        training_id = file_name
+
         data = pd.read_csv(Path(__file__).parent / "data" / f"{file_name}.csv")
 
         pipeline_creator = PipelineCreator(
@@ -35,9 +37,22 @@ def run_experiment():
 
     except Exception as e:
         status = "failed"
+        training_id = None
 
-    return {"status": status}
+    return {"status": status, "job_id": training_id}
+
+
+@app.route("/get_status", methods=["GET"])
+def get_status():
+    req = request.get_json()
+    file_name = req.get("file_name")
+
+    file_path = Path(__file__).parent / "data" / file_name
+
+    if file_path.is_dir() and Path(file_path / "pipelines.pkl").is_file():
+        return {"status": "success"}
+    return {"status": "fail"}
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000)
+    app.run(host="0.0.0.0", port=5000)

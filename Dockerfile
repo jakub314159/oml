@@ -15,4 +15,4 @@ ENV PATH="/app/venv/bin:$PATH"
 RUN pip install .[dev]
 
 # Uruchamiamy testy
-CMD ["python", "click_cli.py"]
+CMD ["python", "server.py"]
