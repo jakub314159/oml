@@ -17,6 +17,7 @@ dependencies = [
     "numpy",
     "scikit-learn",
     "click",
+    "flask",
 ]
 
 [project.optional-dependencies]
