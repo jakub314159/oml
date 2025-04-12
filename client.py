@@ -12,7 +12,7 @@ import requests
 #
 
 get_payload = {"file_name": "ghosts_train"}
-get_resp = requests.get(url="http://localhost:5000/get_status", json=get_payload)
+get_resp = requests.get(url="http://0.0.0.0:5000/get_status", json=get_payload)
 print(get_resp.json())
 
 
