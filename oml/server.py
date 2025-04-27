@@ -7,6 +7,9 @@ from threading import Thread
 from oml.pipeline_creation import PipelineCreator
 from oml.sql_connector import SQLConnector
 
+_database_path = Path(__file__).parents[1] / "data" / "sqlite_base.db"
+
+
 app = Flask(__name__)
 
 
@@ -15,7 +18,7 @@ def update_status(training_id, status):
 
 
 def run_worker(training_id, status, file_name, target_column_name, learning_type, test_metric):
-    connector = SQLConnector(database_path=Path(__file__).parents[1])
+    connector = SQLConnector(database_path=_database_path)
 
     try:
         connector.add_to_table(
@@ -91,7 +94,7 @@ def get_status():
     req = request.get_json()
     training_id = req.get("training_id")
 
-    connector = SQLConnector(database_path=Path(__file__).parents[1])
+    connector = SQLConnector(database_path=_database_path)
     record = connector.get_record_from_table("status_database", "training_id", training_id)
 
     response = make_response(jsonify(record), 202)
@@ -99,7 +102,8 @@ def get_status():
 
 
 if __name__ == "__main__":
-    connector = SQLConnector(database_path=Path(__file__).parents[1])
+
+    connector = SQLConnector(database_path=_database_path)
     if "status_database" not in connector.get_existing_tables():
         connector.create_table(
             "status_database",
