@@ -1,9 +1,10 @@
-from flask import Flask, request
+from flask import Flask, request, make_response, jsonify
 from pathlib import Path
 
 import pandas as pd
 
 from oml.pipeline_creation import PipelineCreator
+from oml.sql_connector import SQLConnector
 
 app = Flask(__name__)
 
@@ -17,29 +18,43 @@ def run_experiment():
         learning_type = req.get("learning_type")
         test_metric = req.get("test_metric")
 
+        status = "pending"
+
+        connector = SQLConnector(database_path=Path(__file__).parents[1])
+        connector.add_to_table("status_database", [(status, file_name, target_column_name, learning_type, test_metric)])
+
         training_id = file_name
 
         data = pd.read_csv(Path(__file__).parent / "data" / f"{file_name}.csv")
 
-        pipeline_creator = PipelineCreator(
-            dataframe=data, target_column_name=target_column_name, learning_type=learning_type, score_metric=test_metric
-        )
-        pipeline_creator.dataframe_preprocessing()
-        pipeline_creator.prepare_model_selector()
-        pipeline_creator.find_best_models(3)
-        pipeline_creator.fit_best_pipelines(3)
+        # pipeline_creator = PipelineCreator(
+        #     dataframe=data, target_column_name=target_column_name, learning_type=learning_type, score_metric=test_metric
+        # )
 
-        folder_path = Path(__file__).parent / "data" / f"{file_name}"
-        folder_path.mkdir(exist_ok=True)
+        # pipeline_creator.dataframe_preprocessing()
+        # pipeline_creator.prepare_model_selector()
+        # pipeline_creator.find_best_models(3)
+        # pipeline_creator.fit_best_pipelines(3)
 
-        pipeline_creator.save_pipeline_to_pickle_file(file_path=folder_path / "pipelines.pkl", index=0)
-        status = "success"
+        # folder_path = Path(__file__).parent / "data" / f"{file_name}"
+        # folder_path.mkdir(exist_ok=True)
+
+        # pipeline_creator.save_pipeline_to_pickle_file(file_path=folder_path / "pipelines.pkl", index=0)
+
+        output_payload = {
+            "training_id": training_id,
+            "input_payload": req,
+        }
+        response = make_response(jsonify(output_payload), 202)
 
     except Exception as e:
-        status = "failed"
-        training_id = None
+        output_payload = {
+            "error": str(e),
+            "input_payload": request.get_json(),
+        }
+        response = make_response(jsonify(output_payload), 500)
 
-    return {"status": status, "job_id": training_id}
+    return response
 
 
 @app.route("/get_status", methods=["GET"])
