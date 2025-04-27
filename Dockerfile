@@ -7,10 +7,6 @@ WORKDIR /app
 # Kopiujemy caly nasz folder do srodka obrazu
 COPY . .
 
-# odpalmy wirtualne srodowisko
-RUN python -m venv venv
-ENV PATH="/app/venv/bin:$PATH"
-
 ## Instalujemy w obrazie wszystkie nasze zaleznosci z pyproject.toml
 RUN pip install .[dev]
 

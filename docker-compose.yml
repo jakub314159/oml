@@ -1,21 +1,9 @@
-version: "3.13"
-
 services:
-  redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6060:6060"
-
   app:
     build: .
     container_name: oml
     ports:
       - "5000:5000"        # host:container port mapping
     volumes:
-      - ./data:/app/data      # mount local folder into /app inside the container
+      - ./local/data:/app/data      # mount local folder into /app inside the container
     working_dir: /app      # set the working directory inside the container
-    depends_on:
-      - redis
-    environment:
-      - REDIS_HOST=redis
