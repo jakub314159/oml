@@ -20,12 +20,12 @@ def run_experiment():
 
         status = "pending"
 
-        connector = SQLConnector(database_path=Path(__file__).parents[1])
-        connector.add_to_table("status_database", [(status, file_name, target_column_name, learning_type, test_metric)])
+        # connector = SQLConnector(database_path=Path(__file__).parents[1])
+        # connector.add_to_table("status_database", [(status, file_name, target_column_name, learning_type, test_metric)])
 
         training_id = file_name
 
-        data = pd.read_csv(Path(__file__).parent / "data" / f"{file_name}.csv")
+        # data = pd.read_csv(Path(__file__).parent / "data" / f"{file_name}.csv")
 
         # pipeline_creator = PipelineCreator(
         #     dataframe=data, target_column_name=target_column_name, learning_type=learning_type, score_metric=test_metric

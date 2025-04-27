@@ -11,4 +11,4 @@ COPY . .
 RUN pip install .[dev]
 
 # Uruchamiamy testy
-CMD ["python", "server.py"]
+CMD ["python", "oml/server.py"]
