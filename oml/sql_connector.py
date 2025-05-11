@@ -66,6 +66,10 @@ class SQLConnector:
         query = "SELECT name FROM sqlite_master"
         res = cursor.execute(query).fetchone()
         connection.close()
+
+        if res is None:
+            res = tuple()
+
         return res
 
     def add_to_table(self, table_name: str, records: list[tuple]) -> None:

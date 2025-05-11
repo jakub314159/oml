@@ -17,6 +17,10 @@ _database_path = Path(__file__).parents[1] / "data" / "sqlite_base.db"
 app = Flask(__name__)
 
 
+class FailedExperiment(Exception):
+    pass
+
+
 def update_status(training_id, status):
     connector.update_record_in_table("status_database", "training_id", training_id, "status", status)
 
@@ -29,7 +33,7 @@ def run_worker(training_id, status, file_name, target_column_name, learning_type
             "status_database", [(training_id, status, file_name, target_column_name, learning_type, test_metric)]
         )
 
-        data = pd.read_csv(Path(__file__).parent / "data" / f"{file_name}.csv")
+        data = pd.read_csv(Path(__file__).parents[1] / "data" / f"{file_name}.csv")
 
         pipeline_creator = PipelineCreator(
             dataframe=data, target_column_name=target_column_name, learning_type=learning_type, score_metric=test_metric
@@ -43,7 +47,7 @@ def run_worker(training_id, status, file_name, target_column_name, learning_type
         pipeline_creator.find_best_models(3)
         pipeline_creator.fit_best_pipelines(3)
 
-        folder_path = Path(__file__).parent / "data" / f"{file_name}"
+        folder_path = Path(__file__).parents[1] / "data" / f"{file_name}"
         folder_path.mkdir(exist_ok=True)
 
         pipeline_creator.save_pipeline_to_pickle_file(file_path=folder_path / "pipelines.pkl", index=0)
@@ -55,7 +59,8 @@ def run_worker(training_id, status, file_name, target_column_name, learning_type
         status = "failed"
         update_status(training_id, status)
 
-        connector.add_to_table("error_database", (training_id, str(e)))
+        connector.add_to_table("error_database", [(training_id, str(e))])
+        raise FailedExperiment(str(e))
 
 
 def generate_id(name: str) -> str:
@@ -84,8 +89,6 @@ def run_experiment():
         )
         thread.start()
 
-        training_id = file_name
-
         output_payload = {
             "training_id": training_id,
             "input_payload": req,
@@ -110,7 +113,12 @@ def get_status():
     connector = SQLConnector(database_path=_database_path)
     record = connector.get_record_from_table("status_database", "training_id", training_id)
 
-    response = make_response(jsonify(record), 202)
+    if record["status"] == "failed":
+        error_record = connector.get_record_from_table("error_database", "training_id", training_id)
+        response = make_response(jsonify(error_record), 202)
+
+    else:
+        response = make_response(jsonify(record), 202)
     return response
 
 
@@ -119,21 +127,19 @@ def get_pipeline() -> Pipeline:
     req = request.get_json()
     file_name = req.get("file_name")
 
-    file_path = Path(__file__).parent / "data" / f"{file_name}.csv"
+    file_path = Path(__file__).parents[1] / "data" / f"{file_name}.csv"
 
     pipeline = PipelineCreator.from_pickle_to_bytes(file_path)
-    #
-    # data = bytes(pipeline, encoding="utf-8")
 
     response = make_response(pipeline)
-    response.headers["Content-Type"] = "application/octet-stream"
-    response.headers["Content-Disposition"] = "attachment; filename=example.txt"
+    response.headers.set("Content-Type", "application/octet-stream")
+    response.headers.set("Content-Disposition", "attachment", filename="pipeline.pkl")
     return response
 
 
 if __name__ == "__main__":
-
     connector = SQLConnector(database_path=_database_path)
+
     if "status_database" not in connector.get_existing_tables():
         connector.create_table(
             "status_database",
