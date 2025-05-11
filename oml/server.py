@@ -3,6 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 from threading import Thread
+import base64
+from datetime import datetime
+
+from sklearn.pipeline import Pipeline
 
 from oml.pipeline_creation import PipelineCreator
 from oml.sql_connector import SQLConnector
@@ -51,6 +55,15 @@ def run_worker(training_id, status, file_name, target_column_name, learning_type
         connector.add_to_table("error_database", (training_id, str(e)))
 
 
+def generate_id(name: str) -> str:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S%f")
+    combined = f"{timestamp}{name}"
+
+    encoded = base64.b64encode(combined.encode("utf-8")).decode("utf-8")
+
+    return encoded
+
+
 @app.route("/run_experiment", methods=["POST"])
 def run_experiment():
     try:
@@ -60,7 +73,7 @@ def run_experiment():
         learning_type = req.get("learning_type")
         test_metric = req.get("test_metric")
 
-        training_id = 0
+        training_id = generate_id(file_name)
         status = "pending"
 
         thread = Thread(
@@ -95,6 +108,23 @@ def get_status():
     record = connector.get_record_from_table("status_database", "training_id", training_id)
 
     response = make_response(jsonify(record), 202)
+    return response
+
+
+@app.route("/get_pipeline", methods=["GET"])
+def get_pipeline() -> Pipeline:
+    req = request.get_json()
+    file_name = req.get("file_name")
+
+    file_path = Path(__file__).parent / "data" / f"{file_name}.csv"
+
+    pipeline = PipelineCreator.from_pickle_to_bytes(file_path)
+    #
+    # data = bytes(pipeline, encoding="utf-8")
+
+    response = make_response(pipeline)
+    response.headers["Content-Type"] = "application/octet-stream"
+    response.headers["Content-Disposition"] = "attachment; filename=example.txt"
     return response
 
 

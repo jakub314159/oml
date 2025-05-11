@@ -1,3 +1,4 @@
+from build.lib.oml.classification.pipeline_creation import PipelineCreator
 from oml.sql_connector import SQLConnector
 
 
@@ -24,3 +25,15 @@ def test_get_status(client, mocker):
 
     assert response.get_json()["status"] == "pending"
     assert response.status_code == 202
+
+
+def test_get_pipeline(client, mocker):
+    payload = {"file_name": "file_name"}
+
+    mocked_pipeline_creator = mocker.MagicMock(PipelineCreator)
+    mocked_pipeline_creator.from_pickle_to_bytes.return_value = bytes("pipeline", encoding="utf-8")
+    mocker.patch("oml.server.PipelineCreator", return_value=mocked_pipeline_creator)
+
+    response = client.get("/get_pipeline", json=payload)
+
+    assert response == {"pipeline": {"file_name": "file_name"}}

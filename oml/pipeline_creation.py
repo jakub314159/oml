@@ -322,3 +322,22 @@ class PipelineCreator:
             pipeline = pickle.load(file)
 
         return pipeline
+
+    @staticmethod
+    def from_pickle_to_bytes(file_path: str | Path) -> Pipeline:
+        """
+        Reads pickle files and turns them back int pipelines
+
+        Parameters
+        ----------
+        file_path: str | Path
+            The path to the file.
+
+        Returns
+        -------
+        Pipeline: pipeline read from bytes
+        """
+        with open(file_path, "rb") as file:
+            pipeline_bytes = file.read()
+
+        return pipeline_bytes
