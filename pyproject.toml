@@ -55,3 +55,8 @@ disable = [
     "use-a-generator",
     "too-many-instance-attributes",
 ]
+
+[tool.coverage.run]
+omit = [
+    "oml/sql_connector.py"
+]
