@@ -8,6 +8,7 @@ import pandas as pd
 
 from oml.pipeline_creation import PipelineCreator
 from oml.sql_connector import SQLConnector
+from oml import logger
 
 _database_path = Path(__file__).parents[1] / "data" / "sqlite_base.db"
 
@@ -88,12 +89,9 @@ def validate_parameters(
             "error": f"The test metric provided in the request is unsupported. User must choose from {metrics_used}"
         }
 
-    if skip == 3:
-        return {"error": "The target_column_name provided in the request doesn't exist in the dataframe."}
-
     dataframe = pd.read_csv(Path(__file__).parents[1] / "data" / f"{file_name}.csv")
 
-    if target_column_name not in dataframe.column:
+    if target_column_name not in dataframe.columns:
         return {"error": "The target_column_name provided in the request doesn't exist in the dataframe."}
 
     return None
@@ -166,6 +164,8 @@ def run_worker(
         update_status(training_id, status)
 
     except Exception as e:
+        logger.warning(str(e), exc_info=True)
+
         status = "failed"
         update_status(training_id, status)
 
@@ -256,7 +256,7 @@ def get_status() -> dict:
     connector = SQLConnector(database_path=_database_path)
     record = connector.get_record_from_table("status_database", "training_id", training_id)
 
-    if record["status"] == "failed":
+    if record.get("status") == "failed":
         error_record = connector.get_record_from_table("error_database", "training_id", training_id)
         response = make_response(jsonify(error_record), 202)
 
