@@ -1,6 +1,6 @@
-import time
-
 import requests
+
+from sklearn.pipeline import Pipeline
 
 
 class OMLClient:
@@ -10,7 +10,8 @@ class OMLClient:
 
         Parameters
         ----------
-        url: None | str
+        url : None | str, default=None
+            <missing description>
         """
         self.url = url or "http://127.0.0.1:5000"
         self.training_id = None
@@ -67,7 +68,7 @@ class OMLClient:
 
         return get_resp.json()
 
-    def get_pipeline(self, file_name: str) -> dict:
+    def get_pipeline(self, file_name: str) -> Pipeline:
         """
         Returns the Pipeline if the experiment is done
 
@@ -80,15 +81,20 @@ class OMLClient:
         -------
         The response from the server with the Pipeline.
         """
+        import pickle
+        from io import BytesIO
+
         pipeline_payload = {"file_name": file_name}
-        pipeline_resp = requests.get(url=f"{self.url}/get_pipeline", json=pipeline_payload)
+        pipeline_resp = requests.get(url=f"{self.url}/get_pipeline", json=pipeline_payload, stream=True)
 
         print(f"Status code {pipeline_resp.status_code}")
 
-        return pipeline_resp.json()
+        return pickle.load(BytesIO(pipeline_resp.content))
 
 
 if __name__ == "__main__":
+    import time
+
     client = OMLClient()
     print(client.run_experiment("ghosts_train", "type", "classification", "recall"))
     print(client.training_id)
@@ -96,3 +102,7 @@ if __name__ == "__main__":
     time.sleep(2)
 
     print(client.get_status())
+
+    pipeline = client.get_pipeline("ghosts_train")
+
+    print(pipeline)
