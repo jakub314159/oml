@@ -14,6 +14,7 @@ class OMLClient:
             <missing description>
         """
         self.url = url or "http://127.0.0.1:5000"
+        self.url_auth = url or "http://127.0.0.1:5050"
         self.training_id = None
 
     def run_experiment(self, file_name: str, target_column_name: str, learning_type: str, test_metric: str) -> dict:
@@ -91,18 +92,70 @@ class OMLClient:
 
         return pickle.load(BytesIO(pipeline_resp.content))
 
+    def register(self, username, password) -> dict:
+        """
+        Register to the app.
+
+        Parameters
+        ----------
+        username: str
+            The username to register.
+
+        password: str
+            The password to register.
+
+        Returns
+        -------
+        dict: The response from the server.
+        """
+        post_payload = {
+            "username": username,
+            "password": password,
+        }
+
+        post_resp = requests.post(url=f"{self.url_auth}/register", json=post_payload)
+
+        print(f"Status code {post_resp.status_code}")
+
+        return post_resp.json()
+
+    def get_token(self, username: str, password: str) -> dict:
+        get_payload = {
+            "username": username,
+            "password": password,
+        }
+
+        post_resp = requests.get(url=f"{self.url_auth}/get_token", json=get_payload)
+
+        print(f"Status code {post_resp.status_code}")
+
+        return post_resp.json()
+
 
 if __name__ == "__main__":
     import time
 
     client = OMLClient()
-    print(client.run_experiment("ghosts_train", "type", "classification", "recall"))
-    print(client.training_id)
+    # print(client.run_experiment("ghosts_train", "type", "classification", "recall"))
+    # print(client.training_id)
+    #
+    # time.sleep(2)
+    #
+    # print(client.get_status())
+    #
+    # pipeline = client.get_pipeline("ghosts_train")
+    #
+    # print(pipeline)
 
-    time.sleep(2)
+    # print(client.register("kuba", "abcd"))
+    # #
+    # time.sleep(2)
+    #
+    # print(client.get_token("kuba", "abcd"))
 
-    print(client.get_status())
-
-    pipeline = client.get_pipeline("ghosts_train")
-
-    print(pipeline)
+    print(
+        requests.get(
+            url=f"{"http://127.0.0.1:5050"}/validate_token",
+            json={"token": "QvzSEmhSEOnCKMAGtRAuR2cldkG4cUS-se-nl83-X6k0HiXfQ4GwWlTGAEvs_11Imx_Z8BnqO5dHsw5vNkT9sw"},
+        ).json()
+    )

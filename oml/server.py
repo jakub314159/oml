@@ -10,7 +10,7 @@ from oml.pipeline_creation import PipelineCreator
 from oml.sql_connector import SQLConnector
 from oml import logger
 
-_database_path = Path(__file__).parents[1] / "data" / "sqlite_base.db"
+_database_path = Path(__file__).parents[1] / "data" / "experiment_database.db"
 
 
 app = Flask(__name__)

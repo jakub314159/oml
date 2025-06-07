@@ -5,7 +5,7 @@ FROM python:3.13
 WORKDIR /app
 
 # Kopiujemy caly nasz folder do srodka obrazu
-COPY . .
+COPY .. .
 
 RUN mkdir "data"
 
