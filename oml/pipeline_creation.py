@@ -43,8 +43,7 @@ class PipelineCreator:
         self.score_metric = score_metric
 
         if self.learning_type not in ["regression", "classification"]:
-            logger.warning("goal is incorrect, You have to choose between 'regression' and 'classification'")
-            self.learning_type = input("please select a goal\n")
+            raise ValueError("goal is incorrect, You have to choose between 'regression' and 'classification'")
 
         self.transformer: ColumnTransformer | None = None
 
@@ -243,18 +242,6 @@ class PipelineCreator:
 
         logger.info("pipelines fitted.")
 
-    def print_pipeline_info(self) -> None:
-        """
-        print the model_info dict with all params and scores.
-
-        Returns
-        -------
-        None
-        """
-        for x in self.pipeline_info:
-            print(f"{x['name']} params are {x['model']}")
-            print(f"{x['name']} got a score of {x['score']}")
-
     def get_pipeline(self, index: int) -> Pipeline:
         """
         gets a pipeline form the pipeline info.
@@ -322,3 +309,22 @@ class PipelineCreator:
             pipeline = pickle.load(file)
 
         return pipeline
+
+    @staticmethod
+    def from_pickle_to_bytes(file_path: str | Path) -> Pipeline:
+        """
+        Reads pickle files and turns them back int pipelines
+
+        Parameters
+        ----------
+        file_path: str | Path
+            The path to the file.
+
+        Returns
+        -------
+        Pipeline: pipeline read from bytes
+        """
+        with open(file_path, "rb") as file:
+            pipeline_bytes = file.read()
+
+        return pipeline_bytes

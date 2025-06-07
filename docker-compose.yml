@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    container_name: oml
+    ports:
+      - "5000:5000"        # host:container port mapping
+    volumes:
+      - ./local/data:/app/data      # mount local folder into /app inside the container
+    working_dir: /app      # set the working directory inside the container

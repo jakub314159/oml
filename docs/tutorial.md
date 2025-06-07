@@ -67,9 +67,6 @@ pipeline_creator.fit_best_pipelines(
     n_best=2
 )
 
-# If you are not sure about which model to chose you can see all models and scores
-pipeline_creator.print_pipeline_info()
-
 # Creating a pipeline
 pipeline = pipeline_creator.get_pipeline(
     index=0

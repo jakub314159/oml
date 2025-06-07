@@ -17,6 +17,7 @@ dependencies = [
     "numpy",
     "scikit-learn",
     "click",
+    "flask",
 ]
 
 [project.optional-dependencies]
@@ -53,4 +54,9 @@ disable = [
     "consider-using-generator",
     "use-a-generator",
     "too-many-instance-attributes",
+]
+
+[tool.coverage.run]
+omit = [
+    "oml/sql_connector.py"
 ]

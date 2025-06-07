@@ -205,7 +205,6 @@ pipeline_creator.prepare_model_selector()
 pipeline_creator.find_best_models(n_best=3)
 pipeline_creator.fit_best_pipelines(test_metric="recall")
 
-pipeline_creator.print_pipeline_info()
 
 pipeline = pipeline_creator.get_pipeline(index=0)
 print(pipeline)
