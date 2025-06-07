@@ -78,7 +78,11 @@ class TestPipelineCreator:
         assert isinstance(pipeline_creator.transformer, ColumnTransformer)
         logger.info.assert_called_with("Preprocessing done.")
 
-    def test_prepare_model_selector(self, pipeline_creator, mocker):
+    def test_wrong_learning_type(self):
+        with pytest.raises(ValueError) as e:
+            pipeline_creator = PipelineCreator(1, 1, 1, 1)
+
+    def test_prepare_model_selector_with_classification(self, pipeline_creator, mocker):
         mocker.patch.object(logger, "info")
 
         pipeline_creator.prepare_model_selector()

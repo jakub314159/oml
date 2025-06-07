@@ -1,14 +1,23 @@
+import pandas
+import pandas as pd
+
 from oml.sql_connector import SQLConnector
+from oml.server import run_worker
 
 
-def test_run_experiment(client):
+def test_run_experiment(client, mocker):
     payload = {
         "file_name": "ghosts_train",
         "target_column_name": "type",
         "learning_type": "classification",
         "test_metric": "recall",
-        "skip": 0,
     }
+
+    mocker.patch("oml.server.Path.exists", return_value=True)
+
+    mocked_df = pd.DataFrame({"type": [1, 2, 3]})
+    mocker.patch("oml.server.pd.read_csv", return_value=mocked_df)
+
     response = client.post("/run_experiment", json=payload)
     assert response.status_code == 202
     data = response.get_json()
@@ -28,31 +37,35 @@ def test_run_experiment_wrong_file_name(client):
     assert data.get("error") == "The file_name provided in the request is incorrect."
 
 
-def test_run_experiment_wrong_learning_type(client):
+def test_run_experiment_wrong_learning_type(client, mocker):
     payload = {
         "file_name": "ghosts_train",
         "target_column_name": "type",
         "learning_type": "test_learning_type",
         "test_metric": "recall",
-        "skip": 1,
     }
+
+    mocker.patch("oml.server.Path.exists", return_value=True)
+
     response = client.post("/run_experiment", json=payload)
     assert response.status_code == 400
     data = response.get_json()
     assert (
         data.get("error")
-        == "The learning type provided in the request is incorrect. User must choose from ['classification', 'regression']"
+        == "The learning type provided is incorrect. User must choose from ['classification', 'regression']"
     )
 
 
-def test_run_experiment_wrong_test_metric(client):
+def test_run_experiment_wrong_test_metric(client, mocker):
     payload = {
         "file_name": "ghosts_train",
         "target_column_name": "type",
         "learning_type": "classification",
         "test_metric": "test_test_metric",
-        "skip": 2,
     }
+
+    mocker.patch("oml.server.Path.exists", return_value=True)
+
     response = client.post("/run_experiment", json=payload)
     assert response.status_code == 400
     data = response.get_json()
@@ -62,14 +75,19 @@ def test_run_experiment_wrong_test_metric(client):
     )
 
 
-def test_run_experiment_wrong_target_column_name(client):
+def test_run_experiment_wrong_target_column_name(client, mocker):
     payload = {
         "file_name": "ghosts_train",
         "target_column_name": "test_target_column_name",
         "learning_type": "classification",
         "test_metric": "recall",
-        "skip": 3,
     }
+    mocker.patch("oml.server.Path.exists", return_value=True)
+
+    mocked_df = mocker.MagicMock(pandas.DataFrame)
+    mocked_df.columns.return_value = {"status": "pending"}
+    mocker.patch("oml.server.pd.read_csv", return_value=mocked_df)
+
     response = client.post("/run_experiment", json=payload)
     assert response.status_code == 400
     data = response.get_json()
@@ -98,3 +116,7 @@ def test_get_pipeline(client, mocker):
     response = client.get("/get_pipeline", json=payload)
 
     assert response.data == expected_value
+
+
+def test_run_worker(mocker):
+    pass

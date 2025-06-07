@@ -46,7 +46,7 @@ class WrongTargetColumnNameError(ValueError):
     """
 
 
-def update_status(training_id: str, status: str) -> None:
+def update_status(training_id: str, status: str, sql_connector) -> None:
     """
     Updates 'status' in the status_database
 
@@ -62,34 +62,51 @@ def update_status(training_id: str, status: str) -> None:
     -------
     None
     """
-    connector.update_record_in_table("status_database", "training_id", training_id, "status", status)
+
+    sql_connector.update_record_in_table("status_database", "training_id", training_id, "status", status)
 
 
-def validate_parameters(
-    file_name: str, target_column_name: str, learning_type: str, test_metric: str, skip: int | None = None
-) -> None | str:
+def validate_parameters(file_name: str, target_column_name: str, learning_type: str, test_metric: str) -> None | dict:
+    """
+    Validates the parameters for the experiment.
+
+    Parameters
+    ----------
+    file_name: str
+        The name of the file.
+
+    target_column_name: str
+        The name of the target column.
+
+    learning_type: str
+        The learning type.
+
+    test_metric: str
+        The test metric.
+
+    Returns
+    -------
+    None: if parameters are correct.
+    dict: if there is an error.
+    """
     file_path = Path(__file__).parents[1] / "data" / f"{file_name}.csv"
 
     if not file_path.exists():
-        if skip not in (1, 2, 3):
-            return {"error": "The file_name provided in the request is incorrect."}
+        return {"error": "The file_name provided in the request is incorrect."}
 
     learning_types_used = ["classification", "regression"]
 
     if learning_type not in learning_types_used:
-        if skip not in (2, 3):
-            return {
-                "error": f"The learning type provided in the request is incorrect. User must choose from {learning_types_used}"
-            }
+        return {"error": f"The learning type provided is incorrect. User must choose from {learning_types_used}"}
 
     metrics_used = ["accuracy", "recall", "f1", "precision", "rmse"]
 
-    if test_metric not in metrics_used and skip != 3:
+    if test_metric not in metrics_used:
         return {
             "error": f"The test metric provided in the request is unsupported. User must choose from {metrics_used}"
         }
 
-    dataframe = pd.read_csv(Path(__file__).parents[1] / "data" / f"{file_name}.csv")
+    dataframe = pd.read_csv(file_path)
 
     if target_column_name not in dataframe.columns:
         return {"error": "The target_column_name provided in the request doesn't exist in the dataframe."}
@@ -131,10 +148,10 @@ def run_worker(
     -------
     None
     """
-    connector = SQLConnector(database_path=_database_path)
+    sql_connector = SQLConnector(database_path=_database_path)
 
     try:
-        connector.add_to_table(
+        sql_connector.add_to_table(
             "status_database", [(training_id, status, file_name, target_column_name, learning_type, test_metric)]
         )
 
@@ -148,29 +165,29 @@ def run_worker(
         )
 
         status = "running"
-        update_status(training_id, status)
+        update_status(training_id, status, sql_connector)
 
         pipeline_creator.dataframe_preprocessing()
         pipeline_creator.prepare_model_selector()
         pipeline_creator.find_best_models(3)
         pipeline_creator.fit_best_pipelines(3)
 
-        folder_path = Path(__file__).parents[1] / "data" / f"{file_name}"
+        folder_path = Path(__file__).parents[1] / "data" / f"{file_name}_{training_id[5:9]}"
         folder_path.mkdir(exist_ok=True)
 
         pipeline_creator.save_pipeline_to_pickle_file(file_path=folder_path / "pipelines.pkl", index=0)
 
         status = "completed"
-        update_status(training_id, status)
+        update_status(training_id, status, sql_connector)
 
     except Exception as e:
         logger.warning(str(e), exc_info=True)
 
         status = "failed"
-        update_status(training_id, status)
+        update_status(training_id, status, sql_connector)
 
-        connector.add_to_table("error_database", [(training_id, str(e))])
-        raise FailedExperiment(str(e))
+        sql_connector.add_to_table("error_database", [(training_id, str(e))])
+        raise FailedExperiment(str(e)) from e
 
 
 def generate_id(file_name: str) -> str:
@@ -209,13 +226,11 @@ def run_experiment() -> dict:
         target_column_name = req.get("target_column_name")
         learning_type = req.get("learning_type")
         test_metric = req.get("test_metric")
-        skip = req.get("skip")
 
-        if skip != 0:
-            validation = validate_parameters(file_name, target_column_name, learning_type, test_metric, skip)
+        validation = validate_parameters(file_name, target_column_name, learning_type, test_metric)
 
-            if validation is not None:
-                return make_response(jsonify(validation), 400)
+        if validation is not None:
+            return make_response(jsonify(validation), 400)
 
         training_id = generate_id(file_name)
         status = "pending"
@@ -231,6 +246,7 @@ def run_experiment() -> dict:
         }
         response = make_response(jsonify(output_payload), 202)
 
+    # pylint: disable=broad-exception-caught
     except Exception as e:
         output_payload = {
             "error": str(e),
@@ -253,11 +269,11 @@ def get_status() -> dict:
     req = request.get_json()
     training_id = req.get("training_id")
 
-    connector = SQLConnector(database_path=_database_path)
-    record = connector.get_record_from_table("status_database", "training_id", training_id)
+    sql_connector = SQLConnector(database_path=_database_path)
+    record = sql_connector.get_record_from_table("status_database", "training_id", training_id)
 
     if record.get("status") == "failed":
-        error_record = connector.get_record_from_table("error_database", "training_id", training_id)
+        error_record = sql_connector.get_record_from_table("error_database", "training_id", training_id)
         response = make_response(jsonify(error_record), 202)
 
     else:

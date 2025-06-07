@@ -49,7 +49,7 @@ class SQLConnector:
         """
         connection = sqlite3.connect(str(self._database_path))
         cursor = connection.cursor()
-        query = "DROP TABLE %s" % table_name
+        query = f"DROP TABLE {table_name}"
         cursor.execute(query)
         connection.close()
 
@@ -114,7 +114,7 @@ class SQLConnector:
         res = cursor.execute(query, [key_val])
         tuple_res = res.fetchone()
         keys = [desc[0] for desc in res.description]
-        res_dict = {k: v for k, v in zip(keys, tuple_res)} if tuple_res else {}
+        res_dict = dict(zip(keys, tuple_res)) if tuple_res else {}
         connection.close()
         return res_dict
 

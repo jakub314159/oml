@@ -43,8 +43,7 @@ class PipelineCreator:
         self.score_metric = score_metric
 
         if self.learning_type not in ["regression", "classification"]:
-            logger.warning("goal is incorrect, You have to choose between 'regression' and 'classification'")
-            self.learning_type = input("please select a goal\n")
+            raise ValueError("goal is incorrect, You have to choose between 'regression' and 'classification'")
 
         self.transformer: ColumnTransformer | None = None
 
@@ -242,18 +241,6 @@ class PipelineCreator:
                 self.pipeline_info = utils_find_best_performing_models(self.pipeline_info, n_best, True)
 
         logger.info("pipelines fitted.")
-
-    def print_pipeline_info(self) -> None:
-        """
-        print the model_info dict with all params and scores.
-
-        Returns
-        -------
-        None
-        """
-        for x in self.pipeline_info:
-            print(f"{x['name']} params are {x['model']}")
-            print(f"{x['name']} got a score of {x['score']}")
 
     def get_pipeline(self, index: int) -> Pipeline:
         """
