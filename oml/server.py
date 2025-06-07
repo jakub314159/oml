@@ -293,7 +293,7 @@ def get_pipeline() -> dict:
     req = request.get_json()
     file_name = req.get("file_name")
 
-    file_path = Path(__file__).parents[1] / "data" / f"{file_name}.csv"
+    file_path = Path(__file__).parents[1] / "data" / f"{file_name}" / "pipelines.pkl"
 
     pipeline = PipelineCreator.from_pickle_to_bytes(file_path)
 
