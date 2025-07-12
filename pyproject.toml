@@ -15,7 +15,7 @@ version = "0.0.1"
 dependencies = [
     "pandas",
     "numpy",
-    "scikit-learn",
+    "scikit-learn<1.7.0",
     "click",
     "flask",
     "requests",
