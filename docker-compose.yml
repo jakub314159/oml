@@ -8,6 +8,8 @@ services:
       - ./local/data:/app/data      # mount local folder into /app inside the container
     working_dir: /app      # set the working directory inside the container
     command: ["python", "oml/server.py"]
+    networks:
+      - app_network
 
   auth_svc:
     build: .
@@ -18,3 +20,9 @@ services:
       - ./local/data:/app/data
     working_dir: /app      # set the working directory inside the container
     command: [ "python", "auth_svc/auth_app.py" ]
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

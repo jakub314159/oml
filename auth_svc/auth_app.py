@@ -1,4 +1,4 @@
-from flask import Flask, request, make_response, jsonify
+from flask import Flask, request, make_response, jsonify, Response
 from pathlib import Path
 import secrets
 import datetime
@@ -11,13 +11,13 @@ app = Flask(__name__)
 
 
 @app.route("/register", methods=["POST"])
-def register() -> dict:
+def register() -> Response:
     """
     Post method for registering a new user.
 
     Returns
     -------
-    dict: response
+    Response: response
     """
     req = request.get_json()
     username = req.get("username")
@@ -31,7 +31,7 @@ def register() -> dict:
             "error": "Username already exists.",
             "input_payload": request.get_json(),
         }
-        response = make_response(jsonify(output_payload), 500)
+        response = make_response(jsonify(output_payload), 409)
 
     else:
         connector.add_to_table("user_database", [(username, password)])
@@ -46,16 +46,30 @@ def register() -> dict:
 
 
 def create_token() -> dict:
+    """
+    Creates a new token for an existing user.
+
+    Returns
+    -------
+    dict: token and expiration date.
+    """
     token = secrets.token_urlsafe(64)
 
     creation_date = datetime.datetime.strftime(datetime.datetime.now(), "%Y%m%d%H")
-    expiration_date = str(int(creation_date) + 1)
+    expiration_date = str(int(creation_date) + 2)
 
     return {"token": token, "expiration_date": expiration_date}
 
 
 @app.route("/get_token", methods=["GET"])
-def get_token() -> dict:
+def get_token() -> Response:
+    """
+    Allows user to create a new token.
+
+    Returns
+    -------
+    Response: output_payload
+    """
     req = request.get_json()
     username = req.get("username")
     password = req.get("password")
@@ -77,15 +91,11 @@ def get_token() -> dict:
     token = token_info["token"]
     expiration_date = token_info["expiration_date"]
 
-    if username in connector.get_table("token_database")["username"]:
-        connector.update_record_in_table("token_database", "username", username, "token", token)
-
-    else:
-        connector.add_to_table("token_database", [(username, token, expiration_date)])
+    connector.add_to_table("token_database", [(token, username, expiration_date)])
 
     output_payload = {
-        "username": username,
         "token": token,
+        "username": username,
         "expiration_date": expiration_date,
     }
 
@@ -94,7 +104,14 @@ def get_token() -> dict:
 
 
 @app.route("/validate_token", methods=["GET"])
-def validate_token() -> dict:
+def validate_token() -> Response:
+    """
+    Checks if the token is valid.
+
+    Returns
+    -------
+    Response: output_payload
+    """
     req = request.get_json()
     token = req.get("token")
 
@@ -106,18 +123,18 @@ def validate_token() -> dict:
             "is_valid": False,
         }
 
-        response = make_response(jsonify(output_payload), 200)
+        response = make_response(jsonify(output_payload), 401)
         return response
 
-    elif int(datetime.datetime.strftime(datetime.datetime.now(), "%Y%m%d%H")) >= int(
-        connector.get_record_from_table("token_database", "token", token)["expiration_date"]
-    ):
+    now = datetime.datetime.strftime(datetime.datetime.now(), "%Y%m%d%H")
+
+    if int(now) > int(connector.get_record_from_table("token_database", "token", token)["expiration_date"]):
         output_payload = {
             "case": "Token expired.",
             "is_valid": False,
         }
 
-        response = make_response(jsonify(output_payload), 200)
+        response = make_response(jsonify(output_payload), 401)
         return response
 
     output_payload = {
@@ -141,7 +158,7 @@ if __name__ == "__main__":
     if "token_database" not in connector.get_existing_tables():
         connector.create_table(
             "token_database",
-            ("username", "token", "expiration_date"),
+            ("token", "username", "expiration_date"),
         )
 
     app.run(host="0.0.0.0", port=5000)

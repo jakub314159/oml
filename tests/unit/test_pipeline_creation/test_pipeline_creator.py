@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import mock_open
 
 import pytest
 from sklearn.compose import ColumnTransformer
@@ -80,7 +81,7 @@ class TestPipelineCreator:
 
     def test_wrong_learning_type(self):
         with pytest.raises(ValueError) as e:
-            pipeline_creator = PipelineCreator(1, 1, 1, 1)
+            PipelineCreator(1, 1, 1, 1)
 
     def test_prepare_model_selector_with_classification(self, pipeline_creator, mocker):
         mocker.patch.object(logger, "info")
@@ -178,3 +179,12 @@ class TestPipelineCreator:
         pipeline = pipeline_creator.from_pickle_to_pipeline(path)
 
         assert pipeline == pipeline_creator.pipeline_info[0]["pipeline"]
+
+    def test_from_pickle_to_bytes(self, pipeline_creator, mocker):
+        mock_file = mock_open(read_data="pipeline")
+        mocker.patch("oml.pipeline_creation.open", mock_file)
+
+        path = mocker.MagicMock(Path)
+        bytes = pipeline_creator.from_pickle_to_bytes(path)
+
+        assert bytes == "pipeline"

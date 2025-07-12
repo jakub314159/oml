@@ -3,7 +3,9 @@ from pathlib import Path
 import base64
 
 from datetime import datetime
-from flask import Flask, request, make_response, jsonify
+
+import requests
+from flask import Flask, request, make_response, jsonify, Response
 import pandas as pd
 
 from oml.pipeline_creation import PipelineCreator
@@ -12,8 +14,9 @@ from oml import logger
 
 _database_path = Path(__file__).parents[1] / "data" / "experiment_database.db"
 
-
 app = Flask(__name__)
+
+_auth_database_path = Path(__file__).parents[1] / "data" / "auth_database.db"
 
 
 class FailedExperiment(Exception):
@@ -57,6 +60,9 @@ def update_status(training_id: str, status: str, sql_connector) -> None:
 
     status: str
         The new status.
+
+    sql_connector: SQLConnector
+        The connector.
 
     Returns
     -------
@@ -211,15 +217,43 @@ def generate_id(file_name: str) -> str:
     return encoded
 
 
+def validate_token(token: str) -> dict:
+    """
+    Validates the token that lets user use the app.
+
+    Parameters
+    ----------
+    token: str
+        The token that will be validated.
+
+    Returns
+    -------
+    dict: payload with the token.
+    """
+    get_resp = requests.get(url=f"{"http://auth_svc:5000"}/validate_token", json={"token": token}, timeout=60).json()
+
+    is_valid = get_resp["is_valid"]
+
+    return is_valid
+
+
 @app.route("/run_experiment", methods=["POST"])
-def run_experiment() -> dict:
+def run_experiment() -> Response:
     """
     Post method used to start the experiment.
 
     Returns
     -------
-    dict: The server response.
+    Response: The server response.
     """
+    bearer_token = request.headers.get("Authorization")
+    token = bearer_token.split(" ")[1]
+
+    is_valid = validate_token(token)
+
+    if not is_valid:
+        return make_response(jsonify({"error": "Invalid token"}), 401)
+
     try:
         req = request.get_json()
         file_name = req.get("file_name")
@@ -230,7 +264,7 @@ def run_experiment() -> dict:
         validation = validate_parameters(file_name, target_column_name, learning_type, test_metric)
 
         if validation is not None:
-            return make_response(jsonify(validation), 400)
+            return make_response(jsonify(validation), 401)
 
         training_id = generate_id(file_name)
         status = "pending"
@@ -258,14 +292,22 @@ def run_experiment() -> dict:
 
 
 @app.route("/get_status", methods=["GET"])
-def get_status() -> dict:
+def get_status() -> Response:
     """
     Get method used to get the status of the experiment.
 
     Returns
     -------
-    dict: The server response.
+    Response: The server response.
     """
+    bearer_token = request.headers.get("Authorization")
+    token = bearer_token.split(" ")[1]
+
+    is_valid = validate_token(token)
+
+    if not is_valid:
+        return make_response(jsonify({"error": "Invalid token"}), 401)
+
     req = request.get_json()
     training_id = req.get("training_id")
 
@@ -282,14 +324,22 @@ def get_status() -> dict:
 
 
 @app.route("/get_pipeline", methods=["GET"])
-def get_pipeline() -> dict:
+def get_pipeline() -> Response:
     """
     Get method used to get the Pipeline if the experiment is finished.
 
     Returns
     -------
-    dict: The server response.
+    Response: The server response.
     """
+    bearer_token = request.headers.get("Authorization")
+    token = bearer_token.split(" ")[1]
+
+    is_valid = validate_token(token)
+
+    if not is_valid:
+        return make_response(jsonify({"error": "Invalid token"}), 401)
+
     req = request.get_json()
     file_name = req.get("file_name")
 
