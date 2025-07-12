@@ -3,7 +3,6 @@ from unittest.mock import mock_open
 
 import pytest
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import recall_score, accuracy_score
 from sklearn.pipeline import Pipeline
 
 from oml.pipeline_creation import PipelineCreator
