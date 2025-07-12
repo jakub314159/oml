@@ -34,7 +34,7 @@ class TestPreprocessor:
         mocker.patch.object(logger, "info")
         preprocessor.remove_invalid_data()
 
-        assert len(preprocessor.df) == 25
+        assert len(preprocessor.df) == 50
         logger.info.assert_called_with("invalid data was removed.")
 
     def test_remove_invalid_data_value_error(self, preprocessor):
@@ -49,7 +49,7 @@ class TestPreprocessor:
 
         preprocessor.data_target_split()
 
-        assert preprocessor.target.shape == (25, 1)
+        assert preprocessor.target.shape == (50, 1)
         assert "target" not in preprocessor.data.columns
         logger.info.assert_called_with("Splitting done.")
 
