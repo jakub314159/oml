@@ -35,6 +35,12 @@ dev = [
     "pre-commit",
 ]
 
+ci = [
+    "oml[test]",
+    "oml[code-check]",
+    "pre-commit",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["oml*"]
