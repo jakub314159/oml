@@ -18,6 +18,7 @@ dependencies = [
     "scikit-learn",
     "click",
     "flask",
+    "requests",
 ]
 
 [project.optional-dependencies]
