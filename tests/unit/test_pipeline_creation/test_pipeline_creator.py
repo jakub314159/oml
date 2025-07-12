@@ -143,6 +143,8 @@ class TestPipelineCreator:
         pipeline_creator.prepare_model_selector()
         pipeline_creator.best_models = model_scores
 
+        mocker.patch("oml.pipeline_creation.Pipeline.predict", return_value=3)
+
         pipeline_creator.fit_best_pipelines()
         assert len(pipeline_creator.pipeline_info) > 0
 
