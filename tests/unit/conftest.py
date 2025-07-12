@@ -6,9 +6,9 @@ import pytest
 def mock_dataframe():
     return pd.DataFrame(
         {
-            "x": [x for x in range(25)],
-            "y": [x for x in range(25)],
-            "target": [x for x in "abcabcacbabcacbacbacbacba"],
+            "x": [x for x in range(50)],
+            "y": [x for x in range(50)],
+            "target": [x for x in "abcabcacbabcacbacbacbacbaabcabcacbabcacbacbacbacba"],
         }
     )
 
