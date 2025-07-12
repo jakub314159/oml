@@ -2,7 +2,6 @@ import pandas
 import pandas as pd
 
 from oml.sql_connector import SQLConnector
-from oml.server import run_worker
 
 
 def test_run_experiment(client, mocker):
@@ -13,26 +12,38 @@ def test_run_experiment(client, mocker):
         "test_metric": "recall",
     }
 
+    headers = {"Authorization": f"Bearer token"}
+
     mocker.patch("oml.server.Path.exists", return_value=True)
+    mocker.patch("oml.server.validate_token", return_value=True)
+
+    mocked_connector = mocker.MagicMock()
+    mocked_connector.add_to_table.return_value = None
+    mocker.patch("oml.server.SQLConnector", return_value=mocked_connector)
 
     mocked_df = pd.DataFrame({"type": [1, 2, 3]})
     mocker.patch("oml.server.pd.read_csv", return_value=mocked_df)
 
-    response = client.post("/run_experiment", json=payload)
+    response = client.post("/run_experiment", json=payload, headers=headers)
     assert response.status_code == 202
     data = response.get_json()
     assert set(data.keys()) == {"training_id", "input_payload"}
 
 
-def test_run_experiment_wrong_file_name(client):
+def test_run_experiment_wrong_file_name(client, mocker):
     payload = {
         "file_name": "test_file_name",
         "target_column_name": "type",
         "learning_type": "classification",
         "test_metric": "recall",
     }
-    response = client.post("/run_experiment", json=payload)
-    assert response.status_code == 400
+
+    headers = {"Authorization": f"Bearer token"}
+
+    mocker.patch("oml.server.validate_token", return_value=True)
+
+    response = client.post("/run_experiment", json=payload, headers=headers)
+    assert response.status_code == 401
     data = response.get_json()
     assert data.get("error") == "The file_name provided in the request is incorrect."
 
@@ -45,10 +56,13 @@ def test_run_experiment_wrong_learning_type(client, mocker):
         "test_metric": "recall",
     }
 
+    headers = {"Authorization": f"Bearer token"}
+
+    mocker.patch("oml.server.validate_token", return_value=True)
     mocker.patch("oml.server.Path.exists", return_value=True)
 
-    response = client.post("/run_experiment", json=payload)
-    assert response.status_code == 400
+    response = client.post("/run_experiment", json=payload, headers=headers)
+    assert response.status_code == 401
     data = response.get_json()
     assert (
         data.get("error")
@@ -63,11 +77,13 @@ def test_run_experiment_wrong_test_metric(client, mocker):
         "learning_type": "classification",
         "test_metric": "test_test_metric",
     }
+    headers = {"Authorization": f"Bearer token"}
 
+    mocker.patch("oml.server.validate_token", return_value=True)
     mocker.patch("oml.server.Path.exists", return_value=True)
 
-    response = client.post("/run_experiment", json=payload)
-    assert response.status_code == 400
+    response = client.post("/run_experiment", json=payload, headers=headers)
+    assert response.status_code == 401
     data = response.get_json()
     assert (
         data.get("error")
@@ -82,25 +98,33 @@ def test_run_experiment_wrong_target_column_name(client, mocker):
         "learning_type": "classification",
         "test_metric": "recall",
     }
+    headers = {"Authorization": f"Bearer token"}
+
     mocker.patch("oml.server.Path.exists", return_value=True)
 
     mocked_df = mocker.MagicMock(pandas.DataFrame)
     mocked_df.columns.return_value = {"status": "pending"}
     mocker.patch("oml.server.pd.read_csv", return_value=mocked_df)
 
-    response = client.post("/run_experiment", json=payload)
-    assert response.status_code == 400
+    mocker.patch("oml.server.validate_token", return_value=True)
+    mocker.patch("oml.server.Path.exists", return_value=True)
+
+    response = client.post("/run_experiment", json=payload, headers=headers)
+    assert response.status_code == 401
     data = response.get_json()
     assert data.get("error") == "The target_column_name provided in the request doesn't exist in the dataframe."
 
 
 def test_get_status(client, mocker):
     payload = {"training_id": "training_id"}
+    headers = {"Authorization": f"Bearer token"}
+
+    mocker.patch("oml.server.validate_token", return_value=True)
 
     mocked_connector = mocker.MagicMock(SQLConnector)
     mocked_connector.get_record_from_table.return_value = {"status": "pending"}
     mocker.patch("oml.server.SQLConnector", return_value=mocked_connector)
-    response = client.get("/get_status", json=payload)
+    response = client.get("/get_status", json=payload, headers=headers)
 
     assert response.get_json()["status"] == "pending"
     assert response.status_code == 202
@@ -109,11 +133,15 @@ def test_get_status(client, mocker):
 def test_get_pipeline(client, mocker):
     payload = {"file_name": "file_name"}
 
+    headers = {"Authorization": f"Bearer token"}
+
+    mocker.patch("oml.server.validate_token", return_value=True)
+
     expected_value = bytes("pipeline", encoding="utf-8")
 
     mocker.patch("oml.server.PipelineCreator.from_pickle_to_bytes", return_value=expected_value)
 
-    response = client.get("/get_pipeline", json=payload)
+    response = client.get("/get_pipeline", json=payload, headers=headers)
 
     assert response.data == expected_value
 

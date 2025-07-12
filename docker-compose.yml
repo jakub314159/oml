@@ -7,3 +7,22 @@ services:
     volumes:
       - ./local/data:/app/data      # mount local folder into /app inside the container
     working_dir: /app      # set the working directory inside the container
+    command: ["python", "oml/server.py"]
+    networks:
+      - app_network
+
+  auth_svc:
+    build: .
+    container_name: auth_svc
+    ports:
+      - "5050:5000"        # host:container port mapping
+    volumes:
+      - ./local/data:/app/data
+    working_dir: /app      # set the working directory inside the container
+    command: [ "python", "auth_svc/auth_app.py" ]
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

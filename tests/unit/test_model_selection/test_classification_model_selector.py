@@ -37,3 +37,10 @@ class TestModelSelector:
 
         best_models = model_selector.find_best_performing_models(n_best=3)
         assert best_models == utils_find_best_performing_models(model_selector.model_scores, 3)
+
+    def test_get_scorer(self, model_selector, mocker):
+        mocker.patch("oml.classification.model_selection.model_selector.len", return_value=1)
+
+        scorer = model_selector._get_scorer()
+
+        assert scorer != None
